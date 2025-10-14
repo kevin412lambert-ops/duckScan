@@ -210,22 +210,11 @@
             border-bottom: none;
         }
         
-        .scan-flash {
-            position: absolute;
+        .scan-corners::after {
             top: 0;
-            left: 0;
             right: 0;
-            bottom: 0;
-            background: #FFD93D;
-            opacity: 0;
-            pointer-events: none;
-            animation: flash 0.3s ease-out;
-        }
-        
-        @keyframes flash {
-            0% { opacity: 0; }
-            50% { opacity: 0.8; }
-            100% { opacity: 0; }
+            border-left: none;
+            border-bottom: none;
         }
         
         .modal-overlay {
@@ -468,7 +457,6 @@
             height: 80vh;
             display: flex;
             flex-direction: column;
-            touch-action: pan-y pinch-zoom;
         }
         
         .viewer-image {
@@ -603,8 +591,6 @@
                 <h2 style="color: #FFD93D; margin-bottom: 20px;">Create New Account</h2>
                 <label for="setup-username">Username:</label>
                 <input type="text" id="setup-username" placeholder="Enter your name or username">
-                <label for="setup-email">Email Address (optional):</label>
-                <input type="email" id="setup-email" placeholder="your@email.com">
                 <label for="setup-password">Create a Password (optional):</label>
                 <input type="password" id="setup-password" placeholder="Leave blank for no password">
                 <button class="btn-primary" onclick="createAccount()">Create Account</button>
@@ -689,19 +675,11 @@
                 </div>
 
                 <div class="settings-section">
-                    <h3>Co-Owners (Full Access)</h3>
-                    <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Co-owners can scan, add, edit, and delete items</p>
-                    <input type="text" id="coowner-id" placeholder="DUCK00002 or username">
+                    <h3>Co-Owners</h3>
+                    <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Add Duck IDs of people who can access your inventory</p>
+                    <input type="text" id="coowner-id" placeholder="DUCK00002">
                     <button class="btn-success" onclick="addCoOwner()">Add Co-Owner</button>
                     <div id="coowner-list" style="margin-top: 15px;"></div>
-                </div>
-
-                <div class="settings-section">
-                    <h3>Viewers (View Only)</h3>
-                    <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Viewers can only search and view your inventory</p>
-                    <input type="text" id="viewer-id" placeholder="DUCK00003 or username">
-                    <button class="btn-success" onclick="addViewer()">Add Viewer</button>
-                    <div id="viewer-list" style="margin-top: 15px;"></div>
                 </div>
 
                 <button class="btn-secondary" onclick="logout()">Logout</button>
@@ -773,10 +751,6 @@
         let editingRow = null;
         let inventoryItems = [];
         let currentImageIndex = 0;
-        let touchStartX = 0;
-        let touchEndX = 0;
-        let lastScannedCode = '';
-        let scanCount = {};
 
         function init() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -803,17 +777,17 @@
         }
 
         async function login() {
-            const userInput = document.getElementById('user-id-input').value.trim();
+            const userId = document.getElementById('user-id-input').value.trim().toUpperCase();
             const password = document.getElementById('password-input').value;
             
-            if (!userInput) {
-                showAlert('Please enter your Duck ID or Username', 'warning');
+            if (!userId) {
+                showAlert('Please enter your Duck ID', 'warning');
                 return;
             }
             
             try {
                 showAlert('Logging in...', 'info');
-                const response = await fetch(`${config.sheetsUrl}?action=getUserByIdOrUsername&userInput=${encodeURIComponent(userInput)}`);
+                const response = await fetch(`${config.sheetsUrl}?action=getUser&userId=${userId}`);
                 const data = await response.json();
                 
                 if (data.status === 'success') {
@@ -822,18 +796,17 @@
                         return;
                     }
                     
-                    config.userId = data.userId;
+                    config.userId = userId;
                     config.username = data.username;
                     config.password = data.password;
                     config.authenticated = true;
-                    config.accessLevel = data.accessLevel || 'owner';
                     
                     sessionStorage.setItem('duckScanSession', JSON.stringify(config));
                     showAlert('Login successful!', 'success');
                     
                     setTimeout(() => initializeApp(), 1000);
                 } else {
-                    showAlert('User not found. Please create an account.', 'warning');
+                    showAlert('Duck ID not found. Please create an account.', 'warning');
                 }
             } catch (err) {
                 showAlert('Error connecting to server. Please check your connection.', 'warning');
@@ -970,20 +943,10 @@
 
         function playBeep() {
             const beep = document.getElementById('beep-sound');
-            beep.currentTime = 0;
-            beep.play().catch(e => console.log('Audio play failed:', e));
-            
+            beep.play();
             if (navigator.vibrate) {
-                navigator.vibrate([100, 50, 100]);
+                navigator.vibrate(200);
             }
-        }
-
-        function showScanFlash() {
-            const scanner = document.getElementById('scanner-container');
-            const flash = document.createElement('div');
-            flash.className = 'scan-flash';
-            scanner.appendChild(flash);
-            setTimeout(() => flash.remove(), 300);
         }
 
         function submitManualBarcode() {
@@ -1007,31 +970,16 @@
         }
 
         function processBarcode(barcode) {
-            // Validate barcode with multiple scans
-            if (!scanCount[barcode]) {
-                scanCount[barcode] = 1;
-                return; // Wait for confirmation
+            currentBarcode = barcode;
+            stopScanner();
+            playBeep();
+            
+            if (existingBarcodes.includes(barcode)) {
+                showAlert('⚠️ DUPLICATE BARCODE DETECTED! This barcode already exists in the database.', 'warning');
             }
             
-            scanCount[barcode]++;
-            
-            // Require 2 consecutive scans of the same code for validation
-            if (scanCount[barcode] >= 2) {
-                // Reset count
-                scanCount = {};
-                
-                currentBarcode = barcode;
-                stopScanner();
-                playBeep();
-                showScanFlash();
-                
-                if (existingBarcodes.includes(barcode)) {
-                    showAlert('⚠️ DUPLICATE BARCODE DETECTED! This barcode already exists in the database.', 'warning');
-                }
-                
-                document.getElementById('scanned-barcode').textContent = barcode;
-                showPage('page-confirm');
-            }
+            document.getElementById('scanned-barcode').textContent = barcode;
+            showPage('page-confirm');
         }
 
         function confirmAdd() {
@@ -1209,47 +1157,11 @@
         function openImageViewer(index) {
             currentImageIndex = index;
             updateImageViewer();
-            const viewer = document.getElementById('image-viewer');
-            viewer.classList.add('active');
-            
-            // Add touch event listeners for swipe
-            const viewerContent = document.querySelector('.viewer-content');
-            viewerContent.addEventListener('touchstart', handleTouchStart, { passive: true });
-            viewerContent.addEventListener('touchend', handleTouchEnd, { passive: true });
+            document.getElementById('image-viewer').classList.add('active');
         }
 
         function closeImageViewer() {
-            const viewer = document.getElementById('image-viewer');
-            viewer.classList.remove('active');
-            
-            // Remove touch event listeners
-            const viewerContent = document.querySelector('.viewer-content');
-            viewerContent.removeEventListener('touchstart', handleTouchStart);
-            viewerContent.removeEventListener('touchend', handleTouchEnd);
-        }
-
-        function handleTouchStart(e) {
-            touchStartX = e.changedTouches[0].screenX;
-        }
-
-        function handleTouchEnd(e) {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }
-
-        function handleSwipe() {
-            const swipeThreshold = 50;
-            const diff = touchStartX - touchEndX;
-            
-            if (Math.abs(diff) > swipeThreshold) {
-                if (diff > 0) {
-                    // Swiped left - next image
-                    nextImage();
-                } else {
-                    // Swiped right - previous image
-                    previousImage();
-                }
-            }
+            document.getElementById('image-viewer').classList.remove('active');
         }
 
         function previousImage() {
@@ -1460,83 +1372,7 @@
             }
         }
 
-        async function addViewer() {
-            const viewerInput = document.getElementById('viewer-id').value.trim();
-            
-            if (!viewerInput) {
-                showAlert('Please enter a Duck ID or username', 'warning');
-                return;
-            }
-            
-            try {
-                showAlert('Adding viewer...', 'info');
-                
-                const response = await fetch(config.sheetsUrl, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'addViewer',
-                        userId: config.userId,
-                        viewerInput: viewerInput
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showAlert('✅ Viewer added successfully!', 'success');
-                    document.getElementById('viewer-id').value = '';
-                    loadViewers();
-                } else {
-                    showAlert('Error adding viewer', 'warning');
-                }
-            } catch (err) {
-                showAlert('Error connecting to Google Sheets', 'warning');
-                console.error(err);
-            }
-        }
-
-        async function loadViewers() {
-            try {
-                const response = await fetch(`${config.sheetsUrl}?action=getViewers&userId=${config.userId}`);
-                const data = await response.json();
-                
-                const list = document.getElementById('viewer-list');
-                if (data.viewers && data.viewers.length > 0) {
-                    list.innerHTML = data.viewers.map(id => `
-                        <div style="background: #1a1a2e; padding: 10px; border-radius: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #FFD93D;">${id}</span>
-                            <button class="btn-danger" style="width: auto; padding: 5px 15px; margin: 0;" onclick="removeViewer('${id}')">Remove</button>
-                        </div>
-                    `).join('');
-                } else {
-                    list.innerHTML = '<p style="color: #888; font-size: 14px;">No viewers yet</p>';
-                }
-            } catch (err) {
-                console.error('Error loading viewers:', err);
-            }
-        }
-
-        async function removeViewer(viewerId) {
-            try {
-                const response = await fetch(config.sheetsUrl, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'removeViewer',
-                        userId: config.userId,
-                        viewerId: viewerId
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showAlert('✅ Viewer removed!', 'success');
-                    loadViewers();
-                }
-            } catch (err) {
-                showAlert('Error removing viewer', 'warning');
-            }
-        }
+        async function removeCoOwner(coOwnerId) {
             try {
                 const response = await fetch(config.sheetsUrl, {
                     method: 'POST',
