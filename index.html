@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Scanner</title>
+    <title>Duck Scanner</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a1a2e">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -58,9 +58,26 @@
         }
         
         .tab-btn.active {
-            color: #667eea;
-            background: rgba(102, 126, 234, 0.1);
-            border-bottom-color: #667eea;
+            color: #FFD93D;
+            background: rgba(255, 217, 61, 0.1);
+            border-bottom-color: #FFD93D;
+        }
+        
+        .settings-icon {
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        
+        .settings-icon:hover {
+            background: rgba(255, 217, 61, 0.1);
+            color: #FFD93D;
         }
         
         .container {
@@ -82,7 +99,8 @@
             font-size: 14px;
         }
         
-        input[type="text"] {
+        input[type="text"],
+        input[type="password"] {
             width: 100%;
             padding: 12px;
             border: 2px solid #2a2a3e;
@@ -91,11 +109,13 @@
             transition: border 0.3s;
             background: #1a1a2e;
             color: #e0e0e0;
+            margin-bottom: 15px;
         }
         
-        input[type="text"]:focus {
+        input[type="text"]:focus,
+        input[type="password"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #FFD93D;
         }
         
         button {
@@ -111,8 +131,8 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #FFD93D 0%, #FFA500 100%);
+            color: #1a1a2e;
         }
         
         .btn-primary:active {
@@ -247,11 +267,11 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #FFD93D 0%, #FFA500 100%);
+            color: #1a1a2e;
             border: none;
             font-size: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 12px rgba(255, 217, 61, 0.4);
             cursor: pointer;
             z-index: 100;
         }
@@ -311,7 +331,7 @@
         }
         
         .barcode-display strong {
-            color: #667eea;
+            color: #FFD93D;
             font-size: 18px;
         }
         
@@ -350,7 +370,7 @@
         
         .inventory-info .barcode {
             font-weight: bold;
-            color: #667eea;
+            color: #FFD93D;
             margin-bottom: 5px;
         }
         
@@ -410,10 +430,9 @@
             border-radius: 4px;
             margin-top: 8px;
             overflow-x: auto;
-            color: #667eea;
+            color: #FFD93D;
         }
         
-        /* Image Viewer */
         .image-viewer {
             position: fixed;
             top: 0;
@@ -476,8 +495,8 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: rgba(102, 126, 234, 0.8);
-            color: white;
+            background: rgba(255, 217, 61, 0.8);
+            color: #1a1a2e;
             border: none;
             font-size: 24px;
             cursor: pointer;
@@ -502,6 +521,42 @@
             font-size: 20px;
             cursor: pointer;
         }
+
+        .user-id-display {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #FFD93D;
+            text-align: center;
+        }
+
+        .user-id-display .id {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FFD93D;
+            font-family: monospace;
+        }
+
+        .user-id-display .label {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .settings-section {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #2a2a3e;
+        }
+
+        .settings-section h3 {
+            color: #FFD93D;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -511,33 +566,45 @@
             <button class="tab-btn active" data-page="page-scanner" onclick="switchTab('page-scanner')">Scanner</button>
             <button class="tab-btn" data-page="page-inventory" onclick="switchTab('page-inventory')">Inventory</button>
         </div>
+        <button class="settings-icon" onclick="switchTab('page-settings')">⚙️</button>
     </div>
 
     <div id="alert-container"></div>
     
     <div class="container">
-        <!-- Setup Page -->
-        <div id="page-setup" class="page active">
+        <!-- Login/Password Page -->
+        <div id="page-login" class="page active">
             <div class="section">
-                <label for="sheets-url">Google Sheets Web App URL:</label>
+                <h2 style="color: #FFD93D; margin-bottom: 20px; text-align: center;">🦆 Welcome to Duck Scanner</h2>
+                <label for="user-id-input">Enter your Duck ID:</label>
+                <input type="text" id="user-id-input" placeholder="DUCK00001" style="text-transform: uppercase;">
+                <label for="password-input">Password:</label>
+                <input type="password" id="password-input" placeholder="Enter your password">
+                <button class="btn-primary" onclick="login()">Login</button>
+                <button class="btn-secondary" onclick="showSetup()">New User? Setup Account</button>
+            </div>
+        </div>
+
+        <!-- Setup Page -->
+        <div id="page-setup" class="page">
+            <div class="section">
+                <h2 style="color: #FFD93D; margin-bottom: 20px;">Setup Your Account</h2>
+                <label for="sheets-url">Master Google Sheets Web App URL:</label>
                 <input type="text" id="sheets-url" placeholder="Paste your Google Apps Script Web App URL here">
-                <small style="color: #888; display: block; margin-top: 5px;">
-                    Need help? See instructions below to set up Google Sheets integration.
-                </small>
-                <button class="btn-primary" onclick="saveConfig()">Save Configuration</button>
+                <label for="setup-password">Create a Password (optional):</label>
+                <input type="password" id="setup-password" placeholder="Leave blank for no password">
+                <button class="btn-primary" onclick="createAccount()">Create Account</button>
                 
                 <div class="setup-instructions">
                     <h3>Setup Instructions:</h3>
                     <ol>
-                        <li>Create a Google Sheet with columns: Barcode, Timestamp, Image, Location</li>
+                        <li>Create a Google Sheet (this will be your master database)</li>
                         <li>Go to Extensions → Apps Script</li>
                         <li>Copy and paste the provided script code</li>
                         <li>Deploy as Web App (Execute as: Me, Access: Anyone)</li>
                         <li>Copy the Web App URL and paste it above</li>
+                        <li>Your Duck ID will be automatically generated</li>
                     </ol>
-                    <h3 style="margin-top: 20px;">URL Parameters:</h3>
-                    <p>You can pass the Google Sheets URL directly in the webpage URL:</p>
-                    <code>https://yoursite.com/?sheet=YOUR_WEBAPP_URL</code>
                 </div>
             </div>
         </div>
@@ -592,13 +659,52 @@
                 <p style="padding: 20px; text-align: center; color: #888;">Loading inventory...</p>
             </div>
         </div>
+
+        <!-- Settings Page -->
+        <div id="page-settings" class="page">
+            <div class="section">
+                <h2 style="color: #FFD93D; margin-bottom: 20px;">Settings</h2>
+                
+                <div class="user-id-display">
+                    <div class="label">Your Duck ID</div>
+                    <div class="id" id="settings-user-id">DUCK00001</div>
+                    <p style="color: #888; font-size: 12px; margin-top: 10px;">Share this ID with co-owners</p>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Change Password</h3>
+                    <label>Current Password:</label>
+                    <input type="password" id="current-password" placeholder="Enter current password">
+                    <label>New Password:</label>
+                    <input type="password" id="new-password" placeholder="Enter new password">
+                    <button class="btn-primary" onclick="changePassword()">Update Password</button>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Master Google Sheets URL</h3>
+                    <label>Web App URL:</label>
+                    <input type="text" id="settings-sheets-url" placeholder="Your Google Apps Script URL">
+                    <button class="btn-primary" onclick="updateSheetsUrl()">Update URL</button>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Co-Owners</h3>
+                    <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Add Duck IDs of people who can access your inventory</p>
+                    <input type="text" id="coowner-id" placeholder="DUCK00002">
+                    <button class="btn-success" onclick="addCoOwner()">Add Co-Owner</button>
+                    <div id="coowner-list" style="margin-top: 15px;"></div>
+                </div>
+
+                <button class="btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </div>
     </div>
 
     <!-- Manual Entry Modal -->
     <div id="manual-entry-overlay" class="modal-overlay">
         <div class="modal-box">
             <h3>Enter Barcode Manually</h3>
-            <input type="text" id="manual-barcode" placeholder="Enter barcode" autofocus>
+            <input type="text" id="manual-barcode" placeholder="Enter barcode">
             <button class="btn-success" onclick="submitManualBarcode()">Submit</button>
             <button class="btn-secondary" onclick="closeManualEntry()">Cancel</button>
         </div>
@@ -609,9 +715,9 @@
         <div class="modal-box">
             <h3>Edit Item</h3>
             <label>Barcode:</label>
-            <input type="text" id="edit-barcode" readonly style="background: #0f0f1e; margin-bottom: 15px;">
+            <input type="text" id="edit-barcode" readonly style="background: #0f0f1e;">
             <label>Location:</label>
-            <input type="text" id="edit-location" placeholder="Enter location" style="margin-bottom: 15px;">
+            <input type="text" id="edit-location" placeholder="Enter location">
             <button class="btn-success" onclick="saveEdit()">Save Changes</button>
             <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
         </div>
@@ -625,7 +731,7 @@
                 <img id="viewer-img" src="" alt="Item">
             </div>
             <div class="viewer-info">
-                <div style="font-weight: bold; color: #667eea; font-size: 18px;" id="viewer-barcode"></div>
+                <div style="font-weight: bold; color: #FFD93D; font-size: 18px;" id="viewer-barcode"></div>
                 <div style="color: #888; font-size: 14px; margin-top: 5px;" id="viewer-date"></div>
                 <div style="color: #888; font-size: 14px;" id="viewer-location"></div>
             </div>
@@ -642,55 +748,135 @@
     </audio>
 
     <script>
-        let config = {};
+        let config = {
+            userId: '',
+            sheetsUrl: '',
+            password: '',
+            authenticated: false
+        };
         let currentBarcode = '';
         let photoDataUrl = '';
         let stream = null;
         let existingBarcodes = [];
         let currentLocation = '';
-        let currentPage = 'scanner';
+        let currentPage = 'login';
         let editingRow = null;
         let inventoryItems = [];
         let currentImageIndex = 0;
 
-        function loadConfig() {
+        function init() {
             const urlParams = new URLSearchParams(window.location.search);
-            const urlFromParam = urlParams.get('sheet') || urlParams.get('url') || urlParams.get('id');
+            const urlId = urlParams.get('id');
             
-            if (urlFromParam) {
-                config.sheetsUrl = urlFromParam;
-                localStorage.setItem('scannerConfig', JSON.stringify(config));
-                document.getElementById('sheets-url').value = urlFromParam;
-                showPage('page-scanner');
-                loadExistingBarcodes();
-                getLocation();
-                startScanner();
-                return;
-            }
-            
-            const saved = localStorage.getItem('scannerConfig');
-            if (saved) {
-                config = JSON.parse(saved);
-                document.getElementById('sheets-url').value = config.sheetsUrl || '';
-                if (config.sheetsUrl) {
-                    showPage('page-scanner');
-                    loadExistingBarcodes();
-                    getLocation();
-                    startScanner();
-                }
+            if (urlId) {
+                document.getElementById('user-id-input').value = urlId;
+                checkSession();
+            } else {
+                checkSession();
             }
         }
 
-        function saveConfig() {
-            const url = document.getElementById('sheets-url').value.trim();
-            if (!url) {
-                showAlert('Please enter a valid Google Sheets Web App URL', 'warning');
+        function checkSession() {
+            const session = sessionStorage.getItem('duckScanSession');
+            if (session) {
+                config = JSON.parse(session);
+                if (config.authenticated) {
+                    initializeApp();
+                    return;
+                }
+            }
+            showPage('page-login');
+        }
+
+        async function login() {
+            const userId = document.getElementById('user-id-input').value.trim().toUpperCase();
+            const password = document.getElementById('password-input').value;
+            
+            if (!userId) {
+                showAlert('Please enter your Duck ID', 'warning');
                 return;
             }
-            config.sheetsUrl = url;
-            localStorage.setItem('scannerConfig', JSON.stringify(config));
-            showAlert('Configuration saved successfully!', 'success');
+            
+            // Get sheets URL from master sheet
+            try {
+                showAlert('Logging in...', 'info');
+                const response = await fetch(`${config.sheetsUrl}?action=getUser&userId=${userId}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Check password if user has one
+                    if (data.password && data.password !== password) {
+                        showAlert('Incorrect password', 'warning');
+                        return;
+                    }
+                    
+                    config.userId = userId;
+                    config.sheetsUrl = data.sheetsUrl;
+                    config.password = data.password;
+                    config.authenticated = true;
+                    
+                    sessionStorage.setItem('duckScanSession', JSON.stringify(config));
+                    showAlert('Login successful!', 'success');
+                    
+                    setTimeout(() => initializeApp(), 1000);
+                } else {
+                    showAlert('Duck ID not found. Please create an account.', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to server. Please check your connection.', 'warning');
+                console.error(err);
+            }
+        }
+
+        function showSetup() {
+            showPage('page-setup');
+        }
+
+        async function createAccount() {
+            const sheetsUrl = document.getElementById('sheets-url').value.trim();
+            const password = document.getElementById('setup-password').value;
+            
+            if (!sheetsUrl) {
+                showAlert('Please enter your Google Sheets URL', 'warning');
+                return;
+            }
+            
+            try {
+                showAlert('Creating account...', 'info');
+                const response = await fetch(sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'createUser',
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    config.userId = data.userId;
+                    config.sheetsUrl = sheetsUrl;
+                    config.password = password;
+                    config.authenticated = true;
+                    
+                    sessionStorage.setItem('duckScanSession', JSON.stringify(config));
+                    showAlert(`Account created! Your Duck ID is: ${data.userId}`, 'success');
+                    
+                    setTimeout(() => initializeApp(), 2000);
+                } else {
+                    showAlert('Error creating account', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        function initializeApp() {
+            document.getElementById('settings-user-id').textContent = config.userId;
+            document.getElementById('settings-sheets-url').value = config.sheetsUrl;
             showPage('page-scanner');
+            switchTab('page-scanner');
             loadExistingBarcodes();
             getLocation();
             startScanner();
@@ -698,7 +884,7 @@
 
         async function loadExistingBarcodes() {
             try {
-                const response = await fetch(config.sheetsUrl + '?action=getBarcodes');
+                const response = await fetch(`${config.sheetsUrl}?action=getBarcodes&userId=${config.userId}`);
                 const data = await response.json();
                 existingBarcodes = data.barcodes || [];
             } catch (e) {
@@ -729,8 +915,14 @@
         }
 
         function switchTab(pageId) {
+            if (!config.authenticated && pageId !== 'page-login' && pageId !== 'page-setup') {
+                showAlert('Please login first', 'warning');
+                return;
+            }
+
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+            const tabBtn = document.querySelector(`[data-page="${pageId}"]`);
+            if (tabBtn) tabBtn.classList.add('active');
             
             if (pageId === 'page-scanner') {
                 showPage('page-scanner');
@@ -739,6 +931,10 @@
                 stopScanner();
                 showPage('page-inventory');
                 loadInventory();
+            } else if (pageId === 'page-settings') {
+                stopScanner();
+                showPage('page-settings');
+                loadCoOwners();
             }
         }
 
@@ -889,6 +1085,8 @@
                 const response = await fetch(config.sheetsUrl, {
                     method: 'POST',
                     body: JSON.stringify({
+                        action: 'addItem',
+                        userId: config.userId,
                         barcode: currentBarcode,
                         image: photoDataUrl,
                         timestamp: new Date().toISOString(),
@@ -905,4 +1103,333 @@
                     currentBarcode = '';
                     photoDataUrl = '';
                     document.getElementById('captured-photo').style.display = 'none';
+                    document.getElementById('capture-btn').classList.remove('hidden');
+                    document.getElementById('retake-btn').classList.add('hidden');
+                    document.getElementById('save-btn').classList.add('hidden');
                     
+                    setTimeout(() => {
+                        showPage('page-scanner');
+                        switchTab('page-scanner');
+                        startScanner();
+                    }, 2000);
+                } else {
+                    showAlert('Error saving to database', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        async function loadInventory() {
+            try {
+                const response = await fetch(`${config.sheetsUrl}?action=getInventory&userId=${config.userId}`);
+                const data = await response.json();
+                const grid = document.getElementById('inventory-grid');
+                
+                if (!data.items || data.items.length === 0) {
+                    grid.innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">No items in inventory yet.</p>';
+                    return;
+                }
+                
+                inventoryItems = data.items;
+                grid.innerHTML = '';
+                
+                data.items.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'inventory-item';
+                    div.id = `item-${item.row}`;
+                    div.innerHTML = `
+                        <img src="${item.image}" alt="Item ${item.barcode}" onclick="openImageViewer(${index})">
+                        <div class="inventory-info">
+                            <div class="barcode">${item.barcode}</div>
+                            <div class="date">${new Date(item.timestamp).toLocaleDateString()}</div>
+                            <div class="location">📍 ${item.location || 'Unknown'}</div>
+                            <div class="item-actions">
+                                <button class="btn-edit" onclick="editItem(${item.row}, '${item.barcode}', '${item.location || ''}')">Edit</button>
+                                <button class="btn-delete" onclick="deleteItem(${item.row}, '${item.barcode}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(div);
+                });
+            } catch (e) {
+                console.error('Error loading inventory:', e);
+                document.getElementById('inventory-grid').innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">Error loading inventory.</p>';
+            }
+        }
+
+        function openImageViewer(index) {
+            currentImageIndex = index;
+            updateImageViewer();
+            document.getElementById('image-viewer').classList.add('active');
+        }
+
+        function closeImageViewer() {
+            document.getElementById('image-viewer').classList.remove('active');
+        }
+
+        function previousImage() {
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                updateImageViewer();
+            }
+        }
+
+        function nextImage() {
+            if (currentImageIndex < inventoryItems.length - 1) {
+                currentImageIndex++;
+                updateImageViewer();
+            }
+        }
+
+        function updateImageViewer() {
+            const item = inventoryItems[currentImageIndex];
+            document.getElementById('viewer-img').src = item.image;
+            document.getElementById('viewer-barcode').textContent = item.barcode;
+            document.getElementById('viewer-date').textContent = new Date(item.timestamp).toLocaleString();
+            document.getElementById('viewer-location').textContent = `📍 ${item.location || 'Unknown'}`;
+        }
+
+        function editItem(row, barcode, location) {
+            editingRow = row;
+            document.getElementById('edit-barcode').value = barcode;
+            document.getElementById('edit-location').value = location;
+            document.getElementById('edit-item-overlay').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-item-overlay').classList.remove('active');
+            editingRow = null;
+        }
+
+        async function saveEdit() {
+            const newLocation = document.getElementById('edit-location').value.trim();
+            
+            try {
+                showAlert('Updating item...', 'info');
+                
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'editItem',
+                        userId: config.userId,
+                        row: editingRow,
+                        location: newLocation
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Item updated successfully!', 'success');
+                    closeEditModal();
+                    loadInventory();
+                } else {
+                    showAlert('Error updating item', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        async function deleteItem(row, barcode) {
+            if (!confirm(`Delete item with barcode ${barcode}?`)) {
+                return;
+            }
+            
+            const itemElement = document.getElementById(`item-${row}`);
+            if (itemElement) {
+                itemElement.style.transition = 'opacity 0.3s, transform 0.3s';
+                itemElement.style.opacity = '0';
+                itemElement.style.transform = 'scale(0.8)';
+                setTimeout(() => itemElement.remove(), 300);
+            }
+            
+            try {
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'deleteItem',
+                        userId: config.userId,
+                        row: row
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Item deleted successfully!', 'success');
+                    
+                    const barcodeIndex = existingBarcodes.indexOf(barcode);
+                    if (barcodeIndex > -1) {
+                        existingBarcodes.splice(barcodeIndex, 1);
+                    }
+                    
+                    setTimeout(() => loadInventory(), 1000);
+                } else {
+                    showAlert('Error deleting item', 'warning');
+                    loadInventory();
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+                loadInventory();
+            }
+        }
+
+        async function changePassword() {
+            const currentPass = document.getElementById('current-password').value;
+            const newPass = document.getElementById('new-password').value;
+            
+            if (config.password && config.password !== currentPass) {
+                showAlert('Current password is incorrect', 'warning');
+                return;
+            }
+            
+            try {
+                showAlert('Updating password...', 'info');
+                
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'changePassword',
+                        userId: config.userId,
+                        newPassword: newPass
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    config.password = newPass;
+                    sessionStorage.setItem('duckScanSession', JSON.stringify(config));
+                    showAlert('✅ Password updated successfully!', 'success');
+                    document.getElementById('current-password').value = '';
+                    document.getElementById('new-password').value = '';
+                } else {
+                    showAlert('Error updating password', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        async function updateSheetsUrl() {
+            const newUrl = document.getElementById('settings-sheets-url').value.trim();
+            
+            if (!newUrl) {
+                showAlert('Please enter a valid URL', 'warning');
+                return;
+            }
+            
+            config.sheetsUrl = newUrl;
+            sessionStorage.setItem('duckScanSession', JSON.stringify(config));
+            showAlert('✅ Sheets URL updated!', 'success');
+        }
+
+        async function addCoOwner() {
+            const coOwnerId = document.getElementById('coowner-id').value.trim().toUpperCase();
+            
+            if (!coOwnerId) {
+                showAlert('Please enter a Duck ID', 'warning');
+                return;
+            }
+            
+            try {
+                showAlert('Adding co-owner...', 'info');
+                
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'addCoOwner',
+                        userId: config.userId,
+                        coOwnerId: coOwnerId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Co-owner added successfully!', 'success');
+                    document.getElementById('coowner-id').value = '';
+                    loadCoOwners();
+                } else {
+                    showAlert('Error adding co-owner', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        async function loadCoOwners() {
+            try {
+                const response = await fetch(`${config.sheetsUrl}?action=getCoOwners&userId=${config.userId}`);
+                const data = await response.json();
+                
+                const list = document.getElementById('coowner-list');
+                if (data.coOwners && data.coOwners.length > 0) {
+                    list.innerHTML = data.coOwners.map(id => `
+                        <div style="background: #1a1a2e; padding: 10px; border-radius: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #FFD93D;">${id}</span>
+                            <button class="btn-danger" style="width: auto; padding: 5px 15px; margin: 0;" onclick="removeCoOwner('${id}')">Remove</button>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<p style="color: #888; font-size: 14px;">No co-owners yet</p>';
+                }
+            } catch (err) {
+                console.error('Error loading co-owners:', err);
+            }
+        }
+
+        async function removeCoOwner(coOwnerId) {
+            try {
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'removeCoOwner',
+                        userId: config.userId,
+                        coOwnerId: coOwnerId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Co-owner removed!', 'success');
+                    loadCoOwners();
+                }
+            } catch (err) {
+                showAlert('Error removing co-owner', 'warning');
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('duckScanSession');
+            config = {
+                userId: '',
+                sheetsUrl: '',
+                password: '',
+                authenticated: false
+            };
+            showPage('page-login');
+            document.getElementById('user-id-input').value = '';
+            document.getElementById('password-input').value = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('image-viewer').classList.contains('active')) {
+                if (e.key === 'ArrowLeft') previousImage();
+                if (e.key === 'ArrowRight') nextImage();
+                if (e.key === 'Escape') closeImageViewer();
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>
