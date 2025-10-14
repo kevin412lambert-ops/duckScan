@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barcode Scanner</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#1a1a2e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
@@ -18,17 +18,19 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0f0f1e;
             min-height: 100vh;
+            color: #e0e0e0;
         }
         
         .header {
-            background: white;
+            background: #1a1a2e;
             padding: 15px 20px;
             display: flex;
             align-items: center;
             gap: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            border-bottom: 1px solid #2a2a3e;
         }
         
         .logo {
@@ -36,24 +38,35 @@
             height: 50px;
         }
         
-        .header h1 {
-            color: #333;
-            font-size: 24px;
+        .header-tabs {
+            display: flex;
+            gap: 10px;
             flex: 1;
         }
         
-        .nav-btn {
-            background: none;
+        .tab-btn {
+            padding: 10px 20px;
+            background: transparent;
             border: none;
-            font-size: 24px;
+            color: #888;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            border-bottom-color: #667eea;
         }
         
         .container {
             max-width: 600px;
             margin: 0 auto;
-            background: white;
+            background: #16213e;
             min-height: calc(100vh - 80px);
         }
         
@@ -64,7 +77,7 @@
         label {
             display: block;
             margin-bottom: 8px;
-            color: #555;
+            color: #b0b0b0;
             font-weight: 600;
             font-size: 14px;
         }
@@ -72,10 +85,12 @@
         input[type="text"] {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid #2a2a3e;
             border-radius: 8px;
             font-size: 16px;
             transition: border 0.3s;
+            background: #1a1a2e;
+            color: #e0e0e0;
         }
         
         input[type="text"]:focus {
@@ -105,8 +120,8 @@
         }
         
         .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
+            background: #2a2a3e;
+            color: #e0e0e0;
         }
         
         .btn-success {
@@ -188,7 +203,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             display: none;
             align-items: center;
             justify-content: center;
@@ -206,12 +221,13 @@
         }
         
         .modal-box {
-            background: white;
+            background: #1a1a2e;
             padding: 30px;
             border-radius: 16px;
             max-width: 400px;
             width: 90%;
             animation: slideUp 0.3s;
+            border: 1px solid #2a2a3e;
         }
         
         @keyframes slideUp {
@@ -221,7 +237,7 @@
         
         .modal-box h3 {
             margin-bottom: 20px;
-            color: #333;
+            color: #e0e0e0;
         }
         
         .floating-btn {
@@ -235,7 +251,7 @@
             color: white;
             border: none;
             font-size: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
             cursor: pointer;
             z-index: 100;
         }
@@ -257,20 +273,20 @@
         }
         
         .alert-success {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
             border: 2px solid #10b981;
         }
         
         .alert-warning {
-            background: #fef3c7;
-            color: #92400e;
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
             border: 2px solid #f59e0b;
         }
         
         .alert-info {
-            background: #dbeafe;
-            color: #1e40af;
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
             border: 2px solid #3b82f6;
         }
         
@@ -287,11 +303,11 @@
         }
         
         .barcode-display {
-            background: #f9fafb;
+            background: #1a1a2e;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2a2a3e;
         }
         
         .barcode-display strong {
@@ -307,13 +323,13 @@
         }
         
         .inventory-item {
-            background: white;
+            background: #1a1a2e;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
             transition: transform 0.2s;
             position: relative;
+            border: 1px solid #2a2a3e;
         }
         
         .inventory-item:active {
@@ -324,6 +340,7 @@
             width: 100%;
             height: 150px;
             object-fit: cover;
+            cursor: pointer;
         }
         
         .inventory-info {
@@ -339,7 +356,7 @@
         
         .inventory-info .date,
         .inventory-info .location {
-            color: #666;
+            color: #888;
             font-size: 11px;
         }
         
@@ -369,14 +386,15 @@
         .setup-instructions {
             margin-top: 20px;
             padding: 20px;
-            background: #f9fafb;
+            background: #1a1a2e;
             border-radius: 8px;
             font-size: 13px;
-            color: #666;
+            color: #888;
+            border: 1px solid #2a2a3e;
         }
         
         .setup-instructions h3 {
-            color: #333;
+            color: #e0e0e0;
             margin-bottom: 10px;
         }
         
@@ -387,19 +405,112 @@
         
         .setup-instructions code {
             display: block;
-            background: #fff;
+            background: #0f0f1e;
             padding: 10px;
             border-radius: 4px;
             margin-top: 8px;
             overflow-x: auto;
+            color: #667eea;
+        }
+        
+        /* Image Viewer */
+        .image-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .image-viewer.active {
+            display: flex;
+        }
+        
+        .viewer-content {
+            position: relative;
+            width: 90%;
+            max-width: 800px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .viewer-image {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .viewer-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        .viewer-info {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .viewer-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+        
+        .viewer-nav button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.8);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            pointer-events: all;
+            transition: all 0.3s;
+        }
+        
+        .viewer-nav button:active {
+            transform: scale(0.9);
+        }
+        
+        .viewer-close {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ef4444;
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <img id="logo" src="duckScan.png" alt="Duck Scanner" class="logo">
-        <h1>Duck Scanner</h1>
-        <button class="nav-btn" onclick="togglePage()">📋</button>
+        <div class="header-tabs">
+            <button class="tab-btn active" data-page="page-scanner" onclick="switchTab('page-scanner')">Scanner</button>
+            <button class="tab-btn" data-page="page-inventory" onclick="switchTab('page-inventory')">Inventory</button>
+        </div>
     </div>
 
     <div id="alert-container"></div>
@@ -410,7 +521,7 @@
             <div class="section">
                 <label for="sheets-url">Google Sheets Web App URL:</label>
                 <input type="text" id="sheets-url" placeholder="Paste your Google Apps Script Web App URL here">
-                <small style="color: #666; display: block; margin-top: 5px;">
+                <small style="color: #888; display: block; margin-top: 5px;">
                     Need help? See instructions below to set up Google Sheets integration.
                 </small>
                 <button class="btn-primary" onclick="saveConfig()">Save Configuration</button>
@@ -449,7 +560,7 @@
                     <strong id="scanned-barcode"></strong>
                 </div>
                 
-                <p style="margin-bottom: 20px; color: #666;">Do you want to add this item to the database?</p>
+                <p style="margin-bottom: 20px; color: #b0b0b0;">Do you want to add this item to the database?</p>
                 
                 <button class="btn-success" onclick="confirmAdd()">Yes, Add to Database</button>
                 <button class="btn-secondary" onclick="cancelAdd()">No, Scan Another</button>
@@ -462,7 +573,7 @@
                 <div class="barcode-display">
                     <p>Barcode:</p>
                     <strong id="photo-barcode"></strong>
-                    <p id="location-display" style="margin-top: 10px; color: #666; font-size: 14px;"></p>
+                    <p id="location-display" style="margin-top: 10px; color: #888; font-size: 14px;"></p>
                 </div>
                 
                 <video id="camera-preview" class="camera-preview" autoplay playsinline></video>
@@ -477,11 +588,8 @@
         
         <!-- Inventory Page -->
         <div id="page-inventory" class="page">
-            <div class="section" style="padding-bottom: 10px;">
-                <button class="btn-primary" onclick="backToScanner()">← Back to Scanner</button>
-            </div>
             <div class="inventory-grid" id="inventory-grid">
-                <p style="padding: 20px; text-align: center; color: #666;">Loading inventory...</p>
+                <p style="padding: 20px; text-align: center; color: #888;">Loading inventory...</p>
             </div>
         </div>
     </div>
@@ -501,11 +609,30 @@
         <div class="modal-box">
             <h3>Edit Item</h3>
             <label>Barcode:</label>
-            <input type="text" id="edit-barcode" readonly style="background: #f0f0f0; margin-bottom: 15px;">
+            <input type="text" id="edit-barcode" readonly style="background: #0f0f1e; margin-bottom: 15px;">
             <label>Location:</label>
             <input type="text" id="edit-location" placeholder="Enter location" style="margin-bottom: 15px;">
             <button class="btn-success" onclick="saveEdit()">Save Changes</button>
             <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Image Viewer -->
+    <div id="image-viewer" class="image-viewer">
+        <div class="viewer-content">
+            <button class="viewer-close" onclick="closeImageViewer()">✕</button>
+            <div class="viewer-image">
+                <img id="viewer-img" src="" alt="Item">
+            </div>
+            <div class="viewer-info">
+                <div style="font-weight: bold; color: #667eea; font-size: 18px;" id="viewer-barcode"></div>
+                <div style="color: #888; font-size: 14px; margin-top: 5px;" id="viewer-date"></div>
+                <div style="color: #888; font-size: 14px;" id="viewer-location"></div>
+            </div>
+            <div class="viewer-nav">
+                <button onclick="previousImage()">‹</button>
+                <button onclick="nextImage()">›</button>
+            </div>
         </div>
     </div>
 
@@ -523,6 +650,8 @@
         let currentLocation = '';
         let currentPage = 'scanner';
         let editingRow = null;
+        let inventoryItems = [];
+        let currentImageIndex = 0;
 
         function loadConfig() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -599,19 +728,18 @@
             currentPage = pageId;
         }
 
-        function togglePage() {
-            if (currentPage === 'page-inventory') {
-                backToScanner();
-            } else {
+        function switchTab(pageId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+            
+            if (pageId === 'page-scanner') {
+                showPage('page-scanner');
+                startScanner();
+            } else if (pageId === 'page-inventory') {
                 stopScanner();
                 showPage('page-inventory');
                 loadInventory();
             }
-        }
-
-        function backToScanner() {
-            showPage('page-scanner');
-            startScanner();
         }
 
         function showAlert(message, type) {
@@ -750,6 +878,7 @@
             document.getElementById('captured-photo').style.display = 'none';
             document.getElementById('retake-btn').classList.add('hidden');
             document.getElementById('save-btn').classList.add('hidden');
+            document.getElementById('capture-btn').classList.remove('hidden');
             startCamera();
         }
 
@@ -776,136 +905,4 @@
                     currentBarcode = '';
                     photoDataUrl = '';
                     document.getElementById('captured-photo').style.display = 'none';
-                    document.getElementById('capture-btn').classList.remove('hidden');
-                    document.getElementById('retake-btn').classList.add('hidden');
-                    document.getElementById('save-btn').classList.add('hidden');
                     
-                    setTimeout(() => {
-                        showPage('page-scanner');
-                        startScanner();
-                    }, 2000);
-                } else {
-                    showAlert('Error saving to database', 'warning');
-                }
-            } catch (err) {
-                showAlert('Error connecting to Google Sheets', 'warning');
-                console.error(err);
-            }
-        }
-
-        async function loadInventory() {
-            try {
-                const response = await fetch(config.sheetsUrl + '?action=getInventory');
-                const data = await response.json();
-                const grid = document.getElementById('inventory-grid');
-                
-                if (!data.items || data.items.length === 0) {
-                    grid.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">No items in inventory yet.</p>';
-                    return;
-                }
-                
-                grid.innerHTML = '';
-                data.items.forEach((item, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'inventory-item';
-                    div.innerHTML = `
-                        <img src="${item.image}" alt="Item ${item.barcode}">
-                        <div class="inventory-info">
-                            <div class="barcode">${item.barcode}</div>
-                            <div class="date">${new Date(item.timestamp).toLocaleDateString()}</div>
-                            <div class="location">📍 ${item.location || 'Unknown'}</div>
-                            <div class="item-actions">
-                                <button class="btn-edit" onclick="editItem(${index + 2}, '${item.barcode}', '${item.location || ''}')">Edit</button>
-                                <button class="btn-delete" onclick="deleteItem(${index + 2}, '${item.barcode}')">Delete</button>
-                            </div>
-                        </div>
-                    `;
-                    grid.appendChild(div);
-                });
-            } catch (e) {
-                console.error('Error loading inventory:', e);
-                document.getElementById('inventory-grid').innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">Error loading inventory.</p>';
-            }
-        }
-
-        function editItem(row, barcode, location) {
-            editingRow = row;
-            document.getElementById('edit-barcode').value = barcode;
-            document.getElementById('edit-location').value = location;
-            document.getElementById('edit-item-overlay').classList.add('active');
-        }
-
-        function closeEditModal() {
-            document.getElementById('edit-item-overlay').classList.remove('active');
-            editingRow = null;
-        }
-
-        async function saveEdit() {
-            const newLocation = document.getElementById('edit-location').value.trim();
-            
-            try {
-                showAlert('Updating item...', 'info');
-                
-                const response = await fetch(config.sheetsUrl, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'edit',
-                        row: editingRow,
-                        location: newLocation
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showAlert('✅ Item updated successfully!', 'success');
-                    closeEditModal();
-                    loadInventory();
-                } else {
-                    showAlert('Error updating item', 'warning');
-                }
-            } catch (err) {
-                showAlert('Error connecting to Google Sheets', 'warning');
-                console.error(err);
-            }
-        }
-
-        async function deleteItem(row, barcode) {
-            if (!confirm(`Delete item with barcode ${barcode}?`)) {
-                return;
-            }
-            
-            try {
-                showAlert('Deleting item...', 'info');
-                
-                const response = await fetch(config.sheetsUrl, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'delete',
-                        row: row
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showAlert('✅ Item deleted successfully!', 'success');
-                    loadInventory();
-                    // Remove from local array
-                    const barcodeIndex = existingBarcodes.indexOf(barcode);
-                    if (barcodeIndex > -1) {
-                        existingBarcodes.splice(barcodeIndex, 1);
-                    }
-                } else {
-                    showAlert('Error deleting item', 'warning');
-                }
-            } catch (err) {
-                showAlert('Error connecting to Google Sheets', 'warning');
-                console.error(err);
-            }
-        }
-
-        loadConfig();
-    </script>
-</body>
-</html>
