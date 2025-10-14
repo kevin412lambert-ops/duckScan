@@ -289,8 +289,22 @@
         let stream = null;
         let existingBarcodes = [];
 
-        // Load config from memory
+        // Load config from memory or URL parameter
         function loadConfig() {
+            // Check URL parameters first
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlFromParam = urlParams.get('sheet') || urlParams.get('url') || urlParams.get('id');
+            
+            if (urlFromParam) {
+                config.sheetsUrl = urlFromParam;
+                localStorage.setItem('scannerConfig', JSON.stringify(config));
+                document.getElementById('sheets-url').value = urlFromParam;
+                showStep('step-scan');
+                loadExistingBarcodes();
+                return;
+            }
+            
+            // Fall back to localStorage
             const saved = localStorage.getItem('scannerConfig');
             if (saved) {
                 config = JSON.parse(saved);
