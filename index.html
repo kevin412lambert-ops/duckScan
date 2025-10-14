@@ -212,6 +212,13 @@
             border-bottom: none;
         }
         
+        .scan-corners::after {
+            top: 0;
+            right: 0;
+            border-left: none;
+            border-bottom: none;
+        }
+        
         .scan-flash {
             position: absolute;
             top: 0;
@@ -596,7 +603,7 @@
                 <input type="password" id="password-input" placeholder="Enter your password">
                 <button class="btn-primary" onclick="handleLogin()">Login</button>
                 <button class="btn-secondary" onclick="handleSetup()">New User? Setup Account</button>
-                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.2.4</p>
+                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.2.6</p>
             </div>
         </div>
 
@@ -763,6 +770,7 @@
     </audio>
 
     <script>
+        // Global variables
         let config = {
             userId: '',
             username: '',
@@ -784,6 +792,15 @@
         let touchEndX = 0;
         let lastScannedCode = '';
         let scanCount = {};
+
+        // Wrapper functions for onclick handlers
+        function handleLogin() {
+            login();
+        }
+
+        function handleSetup() {
+            showSetup();
+        }
 
         function init() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -973,7 +990,9 @@
                 stopScanner();
                 showPage('page-settings');
                 document.getElementById('settings-username').textContent = config.username || 'N/A';
+                document.getElementById('settings-email').value = config.email || '';
                 loadCoOwners();
+                loadViewers();
             }
         }
 
@@ -1024,17 +1043,14 @@
         }
 
         function processBarcode(barcode) {
-            // Validate barcode with multiple scans
             if (!scanCount[barcode]) {
                 scanCount[barcode] = 1;
-                return; // Wait for confirmation
+                return;
             }
             
             scanCount[barcode]++;
             
-            // Require 2 consecutive scans of the same code for validation
             if (scanCount[barcode] >= 2) {
-                // Reset count
                 scanCount = {};
                 
                 currentBarcode = barcode;
@@ -1229,7 +1245,6 @@
             const viewer = document.getElementById('image-viewer');
             viewer.classList.add('active');
             
-            // Add touch event listeners for swipe
             const viewerContent = document.querySelector('.viewer-content');
             viewerContent.addEventListener('touchstart', handleTouchStart, { passive: true });
             viewerContent.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -1239,7 +1254,6 @@
             const viewer = document.getElementById('image-viewer');
             viewer.classList.remove('active');
             
-            // Remove touch event listeners
             const viewerContent = document.querySelector('.viewer-content');
             viewerContent.removeEventListener('touchstart', handleTouchStart);
             viewerContent.removeEventListener('touchend', handleTouchEnd);
@@ -1260,10 +1274,8 @@
             
             if (Math.abs(diff) > swipeThreshold) {
                 if (diff > 0) {
-                    // Swiped left - next image
                     nextImage();
                 } else {
-                    // Swiped right - previous image
                     previousImage();
                 }
             }
@@ -1449,15 +1461,11 @@
             }
         }
 
-        async function updateSheetsUrl() {
-            showAlert('Sheets URL is managed centrally and cannot be changed', 'info');
-        }
-
         async function addCoOwner() {
-            const coOwnerId = document.getElementById('coowner-id').value.trim().toUpperCase();
+            const coOwnerInput = document.getElementById('coowner-id').value.trim();
             
-            if (!coOwnerId) {
-                showAlert('Please enter a Duck ID', 'warning');
+            if (!coOwnerInput) {
+                showAlert('Please enter a Duck ID or username', 'warning');
                 return;
             }
             
@@ -1469,7 +1477,7 @@
                     body: JSON.stringify({
                         action: 'addCoOwner',
                         userId: config.userId,
-                        coOwnerId: coOwnerId
+                        coOwnerId: coOwnerInput
                     })
                 });
                 
@@ -1506,6 +1514,28 @@
                 }
             } catch (err) {
                 console.error('Error loading co-owners:', err);
+            }
+        }
+
+        async function removeCoOwner(coOwnerId) {
+            try {
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'removeCoOwner',
+                        userId: config.userId,
+                        coOwnerId: coOwnerId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Co-owner removed!', 'success');
+                    loadCoOwners();
+                }
+            } catch (err) {
+                showAlert('Error removing co-owner', 'warning');
             }
         }
 
@@ -1586,26 +1616,6 @@
                 showAlert('Error removing viewer', 'warning');
             }
         }
-            try {
-                const response = await fetch(config.sheetsUrl, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'removeCoOwner',
-                        userId: config.userId,
-                        coOwnerId: coOwnerId
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showAlert('✅ Co-owner removed!', 'success');
-                    loadCoOwners();
-                }
-            } catch (err) {
-                showAlert('Error removing co-owner', 'warning');
-            }
-        }
 
         function logout() {
             sessionStorage.removeItem('duckScanSession');
@@ -1628,12 +1638,6 @@
                 if (e.key === 'ArrowRight') nextImage();
                 if (e.key === 'Escape') closeImageViewer();
             }
-        });
-
-        // Add event listeners after DOM loads
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('login-btn').addEventListener('click', login);
-            document.getElementById('setup-btn').addEventListener('click', showSetup);
         });
 
         init();
