@@ -661,19 +661,17 @@
                 </div>
 
                 <div class="settings-section">
+                    <h3>Account Information</h3>
+                    <p style="color: #888; margin-bottom: 10px;">Username: <span style="color: #FFD93D;" id="settings-username"></span></p>
+                </div>
+
+                <div class="settings-section">
                     <h3>Change Password</h3>
                     <label>Current Password:</label>
                     <input type="password" id="current-password" placeholder="Enter current password">
                     <label>New Password:</label>
                     <input type="password" id="new-password" placeholder="Enter new password">
                     <button class="btn-primary" onclick="changePassword()">Update Password</button>
-                </div>
-
-                <div class="settings-section">
-                    <h3>Master Google Sheets URL</h3>
-                    <label>Web App URL:</label>
-                    <input type="text" id="settings-sheets-url" placeholder="Your Google Apps Script URL">
-                    <button class="btn-primary" onclick="updateSheetsUrl()">Update URL</button>
                 </div>
 
                 <div class="settings-section">
@@ -739,7 +737,8 @@
     <script>
         let config = {
             userId: '',
-            sheetsUrl: 'https://script.google.com/macros/s/AKfycbzNQnlh7fKTeWvfMg81MjTbqDDhZZkgXr3np6I35Bekk0WXxNfkSBLoWYBr94uUY90c/exec',
+            username: '',
+            sheetsUrl: 'https://script.google.com/macros/s/AKfycbz7N3Y4aU91563vWC91VY_6rkaM5HYc4oWcLsktaWRm_fC2CAhUfSOeTCphIMmail6d/exec',
             password: '',
             authenticated: false
         };
@@ -786,21 +785,19 @@
                 return;
             }
             
-            // Get sheets URL from master sheet
             try {
                 showAlert('Logging in...', 'info');
                 const response = await fetch(`${config.sheetsUrl}?action=getUser&userId=${userId}`);
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    // Check password if user has one
                     if (data.password && data.password !== password) {
                         showAlert('Incorrect password', 'warning');
                         return;
                     }
                     
                     config.userId = userId;
-                    config.sheetsUrl = data.sheetsUrl;
+                    config.username = data.username;
                     config.password = data.password;
                     config.authenticated = true;
                     
@@ -822,20 +819,29 @@
         }
 
         async function createAccount() {
-            const sheetsUrl = document.getElementById('sheets-url').value.trim();
-            const password = document.getElementById('setup-password').value;
+            const usernameInput = document.getElementById('setup-username');
+            const passwordInput = document.getElementById('setup-password');
             
-            if (!sheetsUrl) {
-                showAlert('Please enter your Google Sheets URL', 'warning');
+            if (!usernameInput) {
+                showAlert('Error: Username field not found', 'warning');
+                return;
+            }
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            
+            if (!username) {
+                showAlert('Please enter a username', 'warning');
                 return;
             }
             
             try {
                 showAlert('Creating account...', 'info');
-                const response = await fetch(sheetsUrl, {
+                const response = await fetch(config.sheetsUrl, {
                     method: 'POST',
                     body: JSON.stringify({
                         action: 'createUser',
+                        username: username,
                         password: password
                     })
                 });
@@ -844,7 +850,7 @@
                 
                 if (data.status === 'success') {
                     config.userId = data.userId;
-                    config.sheetsUrl = sheetsUrl;
+                    config.username = username;
                     config.password = password;
                     config.authenticated = true;
                     
@@ -863,7 +869,6 @@
 
         function initializeApp() {
             document.getElementById('settings-user-id').textContent = config.userId;
-            document.getElementById('settings-sheets-url').value = config.sheetsUrl;
             showPage('page-scanner');
             switchTab('page-scanner');
             loadExistingBarcodes();
@@ -923,6 +928,7 @@
             } else if (pageId === 'page-settings') {
                 stopScanner();
                 showPage('page-settings');
+                document.getElementById('settings-username').textContent = config.username || 'N/A';
                 loadCoOwners();
             }
         }
@@ -1307,16 +1313,7 @@
         }
 
         async function updateSheetsUrl() {
-            const newUrl = document.getElementById('settings-sheets-url').value.trim();
-            
-            if (!newUrl) {
-                showAlert('Please enter a valid URL', 'warning');
-                return;
-            }
-            
-            config.sheetsUrl = newUrl;
-            sessionStorage.setItem('duckScanSession', JSON.stringify(config));
-            showAlert('✅ Sheets URL updated!', 'success');
+            showAlert('Sheets URL is managed centrally and cannot be changed', 'info');
         }
 
         async function addCoOwner() {
@@ -1401,7 +1398,8 @@
             sessionStorage.removeItem('duckScanSession');
             config = {
                 userId: '',
-                sheetsUrl: '',
+                username: '',
+                sheetsUrl: 'https://script.google.com/macros/s/AKfycbz7N3Y4aU91563vWC91VY_6rkaM5HYc4oWcLsktaWRm_fC2CAhUfSOeTCphIMmail6d/exec',
                 password: '',
                 authenticated: false
             };
