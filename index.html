@@ -594,9 +594,9 @@
                 <input type="text" id="user-id-input" placeholder="DUCK00001 or username">
                 <label for="password-input">Password:</label>
                 <input type="password" id="password-input" placeholder="Enter your password">
-                <button class="btn-primary" id="login-btn">Login</button>
-                <button class="btn-secondary" id="setup-btn">New User? Setup Account</button>
-                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.2.3</p>
+                <button class="btn-primary" onclick="handleLogin()">Login</button>
+                <button class="btn-secondary" onclick="handleSetup()">New User? Setup Account</button>
+                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.2.4</p>
             </div>
         </div>
 
@@ -1628,6 +1628,12 @@
                 if (e.key === 'ArrowRight') nextImage();
                 if (e.key === 'Escape') closeImageViewer();
             }
+        });
+
+        // Add event listeners after DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('login-btn').addEventListener('click', login);
+            document.getElementById('setup-btn').addEventListener('click', showSetup);
         });
 
         init();
