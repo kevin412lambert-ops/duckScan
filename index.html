@@ -164,10 +164,19 @@
             overflow: hidden;
         }
         
-        #scanner-container video {
+        #scanner-container video,
+        #shared-scanner-container video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+        
+        #shared-scanner-container {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
         }
         
         .scan-line {
@@ -603,7 +612,7 @@
                 <input type="password" id="password-input" placeholder="Enter your password">
                 <button class="btn-primary" onclick="handleLogin()">Login</button>
                 <button class="btn-secondary" onclick="handleSetup()">New User? Setup Account</button>
-                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.2.6</p>
+                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.2.8</p>
             </div>
         </div>
 
@@ -622,6 +631,36 @@
             </div>
         </div>
         
+        <!-- Shared Scanner Page -->
+        <div id="page-shared-scanner" class="page">
+            <div id="shared-scanner-container">
+                <div class="scan-line"></div>
+                <div class="scan-corners"></div>
+            </div>
+            
+            <button class="floating-btn" onclick="openSharedManualEntry()">⌨️</button>
+            
+            <div class="section">
+                <h3 style="color: #FFD93D; text-align: center; margin-bottom: 10px;">Scan to Search Inventory</h3>
+                <p style="color: #888; text-align: center; font-size: 14px;">Scan a barcode to see if it exists in this inventory</p>
+            </div>
+        </div>
+
+        <!-- Shared Search Result Page -->
+        <div id="page-shared-result" class="page">
+            <div class="section">
+                <div class="barcode-display">
+                    <p>Searched Barcode:</p>
+                    <strong id="shared-search-barcode"></strong>
+                </div>
+                
+                <div id="shared-result-content"></div>
+                
+                <button class="btn-primary" onclick="backToSharedScanner()">Scan Another</button>
+                <button class="btn-secondary" onclick="showSharedInventory()">View Full Inventory</button>
+            </div>
+        </div>
+
         <!-- Scanner Page -->
         <div id="page-scanner" class="page">
             <div id="scanner-container">
@@ -682,6 +721,13 @@
                     <div class="label">Your Duck ID</div>
                     <div class="id" id="settings-user-id">DUCK00001</div>
                     <p style="color: #888; font-size: 12px; margin-top: 10px;">Share this ID with co-owners</p>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Share Your Inventory</h3>
+                    <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Share this link with anyone to let them view your inventory</p>
+                    <input type="text" id="share-link" readonly style="background: #0f0f1e; cursor: pointer;" onclick="copyShareLink()">
+                    <button class="btn-primary" onclick="copyShareLink()">📋 Copy Share Link</button>
                 </div>
 
                 <div class="settings-section">
@@ -792,6 +838,8 @@
         let touchEndX = 0;
         let lastScannedCode = '';
         let scanCount = {};
+        let sharedMode = false;
+        let sharedUserId = '';
 
         // Wrapper functions for onclick handlers
         function handleLogin() {
@@ -805,12 +853,56 @@
         function init() {
             const urlParams = new URLSearchParams(window.location.search);
             const urlId = urlParams.get('id');
+            const viewId = urlParams.get('view');
+            
+            // Check if this is a shared inventory view
+            if (viewId) {
+                loadSharedInventory(viewId);
+                return;
+            }
             
             if (urlId) {
                 document.getElementById('user-id-input').value = urlId;
                 checkSession();
             } else {
                 checkSession();
+            }
+        }
+
+        async function loadSharedInventory(userId) {
+            showPage('page-inventory');
+            document.querySelector('.header-tabs').style.display = 'none';
+            document.querySelector('.settings-icon').style.display = 'none';
+            
+            try {
+                const response = await fetch(`${config.sheetsUrl}?action=getInventory&userId=${userId}`);
+                const data = await response.json();
+                const grid = document.getElementById('inventory-grid');
+                
+                if (!data.items || data.items.length === 0) {
+                    grid.innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">No items in this inventory.</p>';
+                    return;
+                }
+                
+                inventoryItems = data.items;
+                grid.innerHTML = '<h3 style="color: #FFD93D; padding: 0 0 15px 0;">Shared Inventory</h3>';
+                
+                data.items.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'inventory-item';
+                    div.innerHTML = `
+                        <img src="${item.image}" alt="Item ${item.barcode}" onclick="openImageViewer(${index})">
+                        <div class="inventory-info">
+                            <div class="barcode">${item.barcode}</div>
+                            <div class="date">${new Date(item.timestamp).toLocaleDateString()}</div>
+                            <div class="location">📍 ${item.location || 'Unknown'}</div>
+                        </div>
+                    `;
+                    grid.appendChild(div);
+                });
+            } catch (e) {
+                console.error('Error loading shared inventory:', e);
+                document.getElementById('inventory-grid').innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">Error loading inventory.</p>';
             }
         }
 
@@ -991,6 +1083,7 @@
                 showPage('page-settings');
                 document.getElementById('settings-username').textContent = config.username || 'N/A';
                 document.getElementById('settings-email').value = config.email || '';
+                updateShareLink();
                 loadCoOwners();
                 loadViewers();
             }
@@ -1050,7 +1143,8 @@
             
             scanCount[barcode]++;
             
-            if (scanCount[barcode] >= 2) {
+            // Require 15 consecutive scans of the same code for validation
+            if (scanCount[barcode] >= 15) {
                 scanCount = {};
                 
                 currentBarcode = barcode;
@@ -1630,6 +1724,23 @@
             showPage('page-login');
             document.getElementById('user-id-input').value = '';
             document.getElementById('password-input').value = '';
+        }
+
+        function updateShareLink() {
+            const shareUrl = `${window.location.origin}${window.location.pathname}?view=${config.userId}`;
+            document.getElementById('share-link').value = shareUrl;
+        }
+
+        function copyShareLink() {
+            const shareInput = document.getElementById('share-link');
+            shareInput.select();
+            shareInput.setSelectionRange(0, 99999); // For mobile
+            
+            navigator.clipboard.writeText(shareInput.value).then(() => {
+                showAlert('📋 Share link copied to clipboard!', 'success');
+            }).catch(() => {
+                showAlert('Failed to copy link. Please copy manually.', 'warning');
+            });
         }
 
         document.addEventListener('keydown', (e) => {
