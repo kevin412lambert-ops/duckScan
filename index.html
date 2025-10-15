@@ -612,7 +612,7 @@
                 <input type="password" id="password-input" placeholder="Enter your password">
                 <button class="btn-primary" onclick="handleLogin()">Login</button>
                 <button class="btn-secondary" onclick="handleSetup()">New User? Setup Account</button>
-                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.3.0</p>
+                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.3.1</p>
             </div>
         </div>
 
@@ -707,6 +707,12 @@
         
         <!-- Inventory Page -->
         <div id="page-inventory" class="page">
+            <div class="section" style="padding-bottom: 10px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="inventory-search" placeholder="Search by barcode..." style="flex: 1; margin-bottom: 0;">
+                    <button class="btn-primary" onclick="openInventoryScanner()" style="width: auto; padding: 12px 20px; margin: 0; font-size: 20px;">📷</button>
+                </div>
+            </div>
             <div class="inventory-grid" id="inventory-grid">
                 <p style="padding: 20px; text-align: center; color: #888;">Loading inventory...</p>
             </div>
