@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duck Scanner</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f0f1e;
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        
+        .header {
+            background: #1a1a2e;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            border-bottom: 1px solid #2a2a3e;
+        }
+        
+        .logo {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .header-tabs {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-btn.active {
+            color: #FFD93D;
+            background: rgba(255, 217, 61, 0.1);
+            border-bottom-color: #FFD93D;
+        }
+        
+        .settings-icon {
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        
+        .settings-icon:hover {
+            background: rgba(255, 217, 61, 0.1);
+            color: #FFD93D;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #16213e;
+            min-height: calc(100vh - 80px);
+        }
+        
+        .section {
+            padding: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0b0b0;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #2a2a3e;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+        }
+        
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #FFD93D;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #FFD93D 0%, #FFA500 100%);
+            color: #1a1a2e;
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-secondary {
+            background: #2a2a3e;
+            color: #e0e0e0;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        #scanner-container {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #scanner-container video,
+        #shared-scanner-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        #shared-scanner-container {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scan-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+            animation: scan 2s ease-in-out infinite;
+        }
+        
+        @keyframes scan {
+            0%, 100% { transform: translateY(-100px); }
+            50% { transform: translateY(100px); }
+        }
+        
+        .scan-corners {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 60%;
+            pointer-events: none;
+        }
+        
+        .scan-corners::before,
+        .scan-corners::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #ff0000;
+        }
+        
+        .scan-corners::before {
+            top: 0;
+            left: 0;
+            border-right: none;
+            border-bottom: none;
+        }
+        
+        .scan-corners::after {
+            top: 0;
+            right: 0;
+            border-left: none;
+            border-bottom: none;
+        }
+        
+        .scan-flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #FFD93D;
+            opacity: 0;
+            pointer-events: none;
+            animation: flash 0.3s ease-out;
+        }
+        
+        @keyframes flash {
+            0% { opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-box {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 90%;
+            animation: slideUp 0.3s;
+            border: 1px solid #2a2a3e;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-box h3 {
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+        
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FFD93D 0%, #FFA500 100%);
+            color: #1a1a2e;
+            border: none;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(255, 217, 61, 0.4);
+            cursor: pointer;
+            z-index: 100;
+        }
+        
+        .camera-preview {
+            width: 100%;
+            max-height: 400px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 20px;
+            font-size: 14px;
+            animation: slideIn 0.3s;
+        }
+        
+        .alert-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 2px solid #10b981;
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 2px solid #f59e0b;
+        }
+        
+        .alert-info {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .barcode-display {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #2a2a3e;
+        }
+        
+        .barcode-display strong {
+            color: #FFD93D;
+            font-size: 18px;
+        }
+        
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+        
+        .inventory-item {
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+            position: relative;
+            border: 1px solid #2a2a3e;
+        }
+        
+        .inventory-item:active {
+            transform: scale(0.95);
+        }
+        
+        .inventory-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        
+        .inventory-info {
+            padding: 10px;
+            font-size: 12px;
+        }
+        
+        .inventory-info .barcode {
+            font-weight: bold;
+            color: #FFD93D;
+            margin-bottom: 5px;
+        }
+        
+        .inventory-info .date,
+        .inventory-info .location {
+            color: #888;
+            font-size: 11px;
+        }
+        
+        .item-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        .item-actions button {
+            flex: 1;
+            padding: 6px;
+            font-size: 11px;
+            margin: 0;
+        }
+        
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .setup-instructions {
+            margin-top: 20px;
+            padding: 20px;
+            background: #1a1a2e;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #888;
+            border: 1px solid #2a2a3e;
+        }
+        
+        .setup-instructions h3 {
+            color: #e0e0e0;
+            margin-bottom: 10px;
+        }
+        
+        .setup-instructions ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        
+        .setup-instructions code {
+            display: block;
+            background: #0f0f1e;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow-x: auto;
+            color: #FFD93D;
+        }
+        
+        .image-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .image-viewer.active {
+            display: flex;
+        }
+        
+        .viewer-content {
+            position: relative;
+            width: 90%;
+            max-width: 800px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            touch-action: pan-y pinch-zoom;
+        }
+        
+        .viewer-image {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .viewer-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        .viewer-info {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .viewer-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+        
+        .viewer-nav button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 217, 61, 0.8);
+            color: #1a1a2e;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            pointer-events: all;
+            transition: all 0.3s;
+        }
+        
+        .viewer-nav button:active {
+            transform: scale(0.9);
+        }
+        
+        .viewer-close {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ef4444;
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .user-id-display {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #FFD93D;
+            text-align: center;
+        }
+
+        .user-id-display .id {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FFD93D;
+            font-family: monospace;
+        }
+
+        .user-id-display .label {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .settings-section {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #2a2a3e;
+        }
+
+        .settings-section h3 {
+            color: #FFD93D;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img id="logo" src="duckScan.png" alt="Duck Scanner" class="logo">
+        <div class="header-tabs">
+            <button class="tab-btn active" data-page="page-scanner" onclick="switchTab('page-scanner')">Scanner</button>
+            <button class="tab-btn" data-page="page-inventory" onclick="switchTab('page-inventory')">Inventory</button>
+        </div>
+        <button class="settings-icon" onclick="switchTab('page-settings')">⚙️</button>
+    </div>
+
+    <div id="alert-container"></div>
+    
+    <div class="container">
+        <!-- Login/Password Page -->
+        <div id="page-login" class="page active">
+            <div class="section">
+                <h2 style="color: #FFD93D; margin-bottom: 20px; text-align: center;">🦆 Welcome to Duck Scanner</h2>
+                <label for="user-id-input">Enter your Duck ID or Username:</label>
+                <input type="text" id="user-id-input" placeholder="DUCK00001 or username">
+                <label for="password-input">Password:</label>
+                <input type="password" id="password-input" placeholder="Enter your password">
+                <button class="btn-primary" onclick="handleLogin()">Login</button>
+                <button class="btn-secondary" onclick="handleSetup()">New User? Setup Account</button>
+                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.3.1</p>
+            </div>
+        </div>
+
+        <!-- Setup Page -->
+        <div id="page-setup" class="page">
+            <div class="section">
+                <h2 style="color: #FFD93D; margin-bottom: 20px;">Create New Account</h2>
+                <label for="setup-username">Username:</label>
+                <input type="text" id="setup-username" placeholder="Enter your name or username">
+                <label for="setup-email">Email Address (optional):</label>
+                <input type="email" id="setup-email" placeholder="your@email.com">
+                <label for="setup-password">Create a Password (optional):</label>
+                <input type="password" id="setup-password" placeholder="Leave blank for no password">
+                <button class="btn-primary" onclick="createAccount()">Create Account</button>
+                <button class="btn-secondary" onclick="showPage('page-login')">Back to Login</button>
+            </div>
+        </div>
+        
+        <!-- Shared Scanner Page -->
+        <div id="page-shared-scanner" class="page">
+            <div id="shared-scanner-container">
+                <div class="scan-line"></div>
+                <div class="scan-corners"></div>
+            </div>
+            
+            <button class="floating-btn" onclick="openSharedManualEntry()">⌨️</button>
+            
+            <div class="section">
+                <h3 style="color: #FFD93D; text-align: center; margin-bottom: 10px;">Scan to Search Inventory</h3>
+                <p style="color: #888; text-align: center; font-size: 14px;">Scan a barcode to see if it exists in this inventory</p>
+            </div>
+        </div>
+
+        <!-- Shared Search Result Page -->
+        <div id="page-shared-result" class="page">
+            <div class="section">
+                <div class="barcode-display">
+                    <p>Searched Barcode:</p>
+                    <strong id="shared-search-barcode"></strong>
+                </div>
+                
+                <div id="shared-result-content"></div>
+                
+                <button class="btn-primary" onclick="backToSharedSearch()">← Back to Search</button>
+                <button class="btn-secondary" onclick="showSharedInventory()">View Full Inventory</button>
+            </div>
+        </div>
+
+        <!-- Scanner Page -->
+        <div id="page-scanner" class="page">
+            <div id="scanner-container">
+                <div class="scan-line"></div>
+                <div class="scan-corners"></div>
+            </div>
+            
+            <button class="floating-btn" onclick="openManualEntry()">⌨️</button>
+        </div>
+        
+        <!-- Confirm Page -->
+        <div id="page-confirm" class="page">
+            <div class="section">
+                <div class="barcode-display">
+                    <p>Scanned Barcode:</p>
+                    <strong id="scanned-barcode"></strong>
+                </div>
+                
+                <p style="margin-bottom: 20px; color: #b0b0b0;">Do you want to add this item to the database?</p>
+                
+                <button class="btn-success" onclick="confirmAdd()">Yes, Add to Database</button>
+                <button class="btn-secondary" onclick="cancelAdd()">No, Scan Another</button>
+            </div>
+        </div>
+        
+        <!-- Photo Page -->
+        <div id="page-photo" class="page">
+            <div class="section">
+                <div class="barcode-display">
+                    <p>Barcode:</p>
+                    <strong id="photo-barcode"></strong>
+                    <p id="location-display" style="margin-top: 10px; color: #888; font-size: 14px;"></p>
+                </div>
+                
+                <video id="camera-preview" class="camera-preview" autoplay playsinline></video>
+                <canvas id="photo-canvas" style="display: none;"></canvas>
+                <img id="captured-photo" class="camera-preview" alt="Captured photo">
+                
+                <button class="btn-success" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
+                <button class="btn-secondary hidden" id="retake-btn" onclick="retakePhoto()">Retake Photo</button>
+                <button class="btn-success hidden" id="save-btn" onclick="saveToSheets()">Save to Database</button>
+            </div>
+        </div>
+        
+        <!-- Inventory Page -->
+        <div id="page-inventory" class="page">
+            <div class="section" style="padding-bottom: 10px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="inventory-search" placeholder="Search by barcode..." style="flex: 1; margin-bottom: 0;">
+                    <button class="btn-primary" onclick="openInventoryScanner()" style="width: auto; padding: 12px 20px; margin: 0; font-size: 20px;">📷</button>
+                </div>
+            </div>
+            <div class="inventory-grid" id="inventory-grid">
+                <p style="padding: 20px; text-align: center; color: #888;">Loading inventory...</p>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="page-settings" class="page">
+            <div class="section">
+                <h2 style="color: #FFD93D; margin-bottom: 20px;">Settings</h2>
+                
+                <div class="user-id-display">
+                    <div class="label">Your Duck ID</div>
+                    <div class="id" id="settings-user-id">DUCK00001</div>
+                    <p style="color: #888; font-size: 12px; margin-top: 10px;">Share this ID with co-owners</p>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Share Your Inventory</h3>
+                    <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Share this link with anyone to let them view your inventory</p>
+                    <input type="text" id="share-link" readonly style="background: #0f0f1e; cursor: pointer;" onclick="copyShareLink()">
+                    <button class="btn-primary" onclick="copyShareLink()">📋 Copy Share Link</button>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Account Information</h3>
+                    <p style="color: #888; margin-bottom: 10px;">Username: <span style="color: #FFD93D;" id="settings-username"></span></p>
+                    <label>Email Address:</label>
+                    <input type="email" id="settings-email" placeholder="your@email.com">
+                    <button class="btn-primary" onclick="updateEmail()">Update Email</button>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Change Password</h3>
+                    <label>Current Password:</label>
+                    <input type="password" id="current-password" placeholder="Enter current password">
+                    <label>New Password:</label>
+                    <input type="password" id="new-password" placeholder="Enter new password">
+                    <button class="btn-primary" onclick="changePassword()">Update Password</button>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Co-Owners (Full Access)</h3>
+                    <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Co-owners can scan, add, edit, and delete items</p>
+                    <input type="text" id="coowner-id" placeholder="DUCK00002 or username">
+                    <button class="btn-success" onclick="addCoOwner()">Add Co-Owner</button>
+                    <div id="coowner-list" style="margin-top: 15px;"></div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Viewers (View Only)</h3>
+                    <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Viewers can only search and view your inventory</p>
+                    <input type="text" id="viewer-id" placeholder="DUCK00003 or username">
+                    <button class="btn-success" onclick="addViewer()">Add Viewer</button>
+                    <div id="viewer-list" style="margin-top: 15px;"></div>
+                </div>
+
+                <button class="btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Entry Modal -->
+    <div id="manual-entry-overlay" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Enter Barcode Manually</h3>
+            <input type="text" id="manual-barcode" placeholder="Enter barcode">
+            <button class="btn-success" onclick="submitManualBarcode()">Submit</button>
+            <button class="btn-secondary" onclick="closeManualEntry()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Edit Item Modal -->
+    <div id="edit-item-overlay" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Edit Item</h3>
+            <label>Barcode:</label>
+            <input type="text" id="edit-barcode" readonly style="background: #0f0f1e;">
+            <label>Location:</label>
+            <input type="text" id="edit-location" placeholder="Enter location">
+            <button class="btn-success" onclick="saveEdit()">Save Changes</button>
+            <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Image Viewer -->
+    <div id="image-viewer" class="image-viewer">
+        <div class="viewer-content">
+            <button class="viewer-close" onclick="closeImageViewer()">✕</button>
+            <div class="viewer-image">
+                <img id="viewer-img" src="" alt="Item">
+            </div>
+            <div class="viewer-info">
+                <div style="font-weight: bold; color: #FFD93D; font-size: 18px;" id="viewer-barcode"></div>
+                <div style="color: #888; font-size: 14px; margin-top: 5px;" id="viewer-date"></div>
+                <div style="color: #888; font-size: 14px;" id="viewer-location"></div>
+            </div>
+            <div class="viewer-nav">
+                <button onclick="previousImage()">‹</button>
+                <button onclick="nextImage()">›</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Beep Sound -->
+    <audio id="beep-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE=" type="audio/wav">
+    </audio>
+
+    <script>
+        // Global variables
+        let config = {
+            userId: '',
+            username: '',
+            email: '',
+            sheetsUrl: 'https://script.google.com/macros/s/AKfycbzuAcghDOMy8aInT5LlFb8LQ8rQFOL8WFegcJ6c_vQpTulHr1sWUnIuO3SPU_Nll3zT/exec',
+            password: '',
+            authenticated: false
+        };
+        let currentBarcode = '';
+        let photoDataUrl = '';
+        let stream = null;
+        let existingBarcodes = [];
+        let currentLocation = '';
+        let currentPage = 'login';
+        let editingRow = null;
+        let inventoryItems = [];
+        let currentImageIndex = 0;
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let lastScannedCode = '';
+        let scanCount = {};
+        let sharedMode = false;
+        let sharedUserId = '';
+
+        // Wrapper functions for onclick handlers
+        function handleLogin() {
+            login();
+        }
+
+        function handleSetup() {
+            showSetup();
+        }
+
+        function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlId = urlParams.get('id');
+            const viewId = urlParams.get('view');
+            
+            // Check if this is a shared inventory view
+            if (viewId) {
+                loadSharedInventory(viewId);
+                return;
+            }
+            
+            if (urlId) {
+                document.getElementById('user-id-input').value = urlId;
+                checkSession();
+            } else {
+                checkSession();
+            }
+        }
+
+        async function loadSharedInventory(userId) {
+            showPage('page-inventory');
+            document.querySelector('.header-tabs').style.display = 'none';
+            document.querySelector('.settings-icon').style.display = 'none';
+            
+            try {
+                const response = await fetch(`${config.sheetsUrl}?action=getInventory&userId=${userId}`);
+                const data = await response.json();
+                const grid = document.getElementById('inventory-grid');
+                
+                if (!data.items || data.items.length === 0) {
+                    grid.innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">No items in this inventory.</p>';
+                    return;
+                }
+                
+                inventoryItems = data.items;
+                grid.innerHTML = '<h3 style="color: #FFD93D; padding: 0 0 15px 0;">Shared Inventory</h3>';
+                
+                data.items.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'inventory-item';
+                    div.innerHTML = `
+                        <img src="${item.image}" alt="Item ${item.barcode}" onclick="openImageViewer(${index})">
+                        <div class="inventory-info">
+                            <div class="barcode">${item.barcode}</div>
+                            <div class="date">${new Date(item.timestamp).toLocaleDateString()}</div>
+                            <div class="location">📍 ${item.location || 'Unknown'}</div>
+                        </div>
+                    `;
+                    grid.appendChild(div);
+                });
+            } catch (e) {
+                console.error('Error loading shared inventory:', e);
+                document.getElementById('inventory-grid').innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">Error loading inventory.</p>';
+            }
+        }
+
+        function checkSession() {
+            const session = sessionStorage.getItem('duckScanSession');
+            if (session) {
+                config = JSON.parse(session);
+                if (config.authenticated) {
+                    initializeApp();
+                    return;
+                }
+            }
+            showPage('page-login');
+        }
+
+        async function login() {
+            const userInput = document.getElementById('user-id-input').value.trim();
+            const password = document.getElementById('password-input').value;
+            
+            if (!userInput) {
+                showAlert('Please enter your Duck ID or Username', 'warning');
+                return;
+            }
+            
+            try {
+                showAlert('Logging in...', 'info');
+                const response = await fetch(`${config.sheetsUrl}?action=getUserByIdOrUsername&userInput=${encodeURIComponent(userInput)}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    if (data.password && data.password !== password) {
+                        showAlert('Incorrect password', 'warning');
+                        return;
+                    }
+                    
+                    config.userId = data.userId;
+                    config.username = data.username;
+                    config.email = data.email || '';
+                    config.password = data.password;
+                    config.authenticated = true;
+                    config.accessLevel = data.accessLevel || 'owner';
+                    
+                    sessionStorage.setItem('duckScanSession', JSON.stringify(config));
+                    showAlert('Login successful!', 'success');
+                    
+                    setTimeout(() => initializeApp(), 1000);
+                } else {
+                    showAlert('User not found. Please create an account.', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to server. Please check your connection.', 'warning');
+                console.error(err);
+            }
+        }
+
+        function showSetup() {
+            showPage('page-setup');
+        }
+
+        async function createAccount() {
+            const usernameInput = document.getElementById('setup-username');
+            const passwordInput = document.getElementById('setup-password');
+            const emailInput = document.getElementById('setup-email');
+            
+            if (!usernameInput) {
+                showAlert('Error: Username field not found', 'warning');
+                return;
+            }
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            const email = emailInput.value.trim();
+            
+            if (!username) {
+                showAlert('Please enter a username', 'warning');
+                return;
+            }
+            
+            try {
+                showAlert('Creating account...', 'info');
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'createUser',
+                        username: username,
+                        password: password,
+                        email: email
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    config.userId = data.userId;
+                    config.username = username;
+                    config.email = email;
+                    config.password = password;
+                    config.authenticated = true;
+                    
+                    sessionStorage.setItem('duckScanSession', JSON.stringify(config));
+                    showAlert(`Account created! Your Duck ID is: ${data.userId}`, 'success');
+                    
+                    setTimeout(() => initializeApp(), 2000);
+                } else if (data.status === 'duplicate_email') {
+                    showAlert('This email address is already in use', 'warning');
+                } else {
+                    showAlert('Error creating account', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        function initializeApp() {
+            document.getElementById('settings-user-id').textContent = config.userId;
+            document.getElementById('settings-email').value = config.email || '';
+            showPage('page-scanner');
+            switchTab('page-scanner');
+            loadExistingBarcodes();
+            getLocation();
+            startScanner();
+        }
+
+        async function loadExistingBarcodes() {
+            try {
+                const response = await fetch(`${config.sheetsUrl}?action=getBarcodes&userId=${config.userId}`);
+                const data = await response.json();
+                existingBarcodes = data.barcodes || [];
+            } catch (e) {
+                console.error('Error loading barcodes:', e);
+            }
+        }
+
+        async function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`);
+                        const data = await response.json();
+                        currentLocation = data.address.city || data.address.town || data.address.village || 'Unknown';
+                    } catch (e) {
+                        currentLocation = 'Unknown';
+                    }
+                }, () => {
+                    currentLocation = 'Unknown';
+                });
+            } else {
+                currentLocation = 'Unknown';
+            }
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            currentPage = pageId;
+        }
+
+        function switchTab(pageId) {
+            if (!config.authenticated && pageId !== 'page-login' && pageId !== 'page-setup') {
+                showAlert('Please login first', 'warning');
+                return;
+            }
+
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            const tabBtn = document.querySelector(`[data-page="${pageId}"]`);
+            if (tabBtn) tabBtn.classList.add('active');
+            
+            if (pageId === 'page-scanner') {
+                showPage('page-scanner');
+                startScanner();
+            } else if (pageId === 'page-inventory') {
+                stopScanner();
+                showPage('page-inventory');
+                loadInventory();
+            } else if (pageId === 'page-settings') {
+                stopScanner();
+                showPage('page-settings');
+                document.getElementById('settings-username').textContent = config.username || 'N/A';
+                document.getElementById('settings-email').value = config.email || '';
+                updateShareLink();
+                loadCoOwners();
+                loadViewers();
+            }
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        function playBeep() {
+            const beep = document.getElementById('beep-sound');
+            beep.currentTime = 0;
+            beep.play().catch(e => console.log('Audio play failed:', e));
+            
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+        }
+
+        function showScanFlash() {
+            const scanner = document.getElementById('scanner-container');
+            const sharedScanner = document.getElementById('shared-scanner-container');
+            const target = sharedMode ? sharedScanner : scanner;
+            
+            if (target) {
+                const flash = document.createElement('div');
+                flash.className = 'scan-flash';
+                target.appendChild(flash);
+                setTimeout(() => flash.remove(), 300);
+            }
+        }
+
+        function submitManualBarcode() {
+            const barcode = document.getElementById('manual-barcode').value.trim();
+            if (!barcode) {
+                showAlert('Please enter a barcode', 'warning');
+                return;
+            }
+            closeManualEntry();
+            processBarcode(barcode);
+        }
+
+        function openManualEntry() {
+            document.getElementById('manual-entry-overlay').classList.add('active');
+            document.getElementById('manual-barcode').focus();
+        }
+
+        function closeManualEntry() {
+            document.getElementById('manual-entry-overlay').classList.remove('active');
+            document.getElementById('manual-barcode').value = '';
+        }
+
+        function processBarcode(barcode) {
+            if (!scanCount[barcode]) {
+                scanCount[barcode] = 1;
+                return;
+            }
+            
+            scanCount[barcode]++;
+            
+            // Require 15 consecutive scans of the same code for validation
+            if (scanCount[barcode] >= 15) {
+                scanCount = {};
+                
+                currentBarcode = barcode;
+                stopScanner();
+                playBeep();
+                showScanFlash();
+                
+                if (existingBarcodes.includes(barcode)) {
+                    showAlert('⚠️ DUPLICATE BARCODE DETECTED! This barcode already exists in the database.', 'warning');
+                }
+                
+                document.getElementById('scanned-barcode').textContent = barcode;
+                showPage('page-confirm');
+            }
+        }
+
+        function confirmAdd() {
+            document.getElementById('photo-barcode').textContent = currentBarcode;
+            document.getElementById('location-display').textContent = `📍 ${currentLocation}`;
+            showPage('page-photo');
+            startCamera();
+        }
+
+        function cancelAdd() {
+            currentBarcode = '';
+            showPage('page-scanner');
+            startScanner();
+        }
+
+        function startScanner() {
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector('#scanner-container'),
+                    constraints: {
+                        facingMode: "environment"
+                    }
+                },
+                decoder: {
+                    readers: ["ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader", "code_128_reader", "code_39_reader"]
+                }
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                    showAlert('Camera access denied or not available', 'warning');
+                    return;
+                }
+                Quagga.start();
+            });
+
+            Quagga.onDetected(function(data) {
+                if (data && data.codeResult && data.codeResult.code) {
+                    processBarcode(data.codeResult.code);
+                }
+            });
+        }
+
+        function stopScanner() {
+            Quagga.stop();
+        }
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                const video = document.getElementById('camera-preview');
+                video.srcObject = stream;
+                video.style.display = 'block';
+                document.getElementById('capture-btn').classList.remove('hidden');
+            } catch (err) {
+                showAlert('Camera access denied', 'warning');
+            }
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('camera-preview');
+            const canvas = document.getElementById('photo-canvas');
+            const img = document.getElementById('captured-photo');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            photoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            img.src = photoDataUrl;
+            img.style.display = 'block';
+            video.style.display = 'none';
+            
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            document.getElementById('capture-btn').classList.add('hidden');
+            document.getElementById('retake-btn').classList.remove('hidden');
+            document.getElementById('save-btn').classList.remove('hidden');
+        }
+
+        function retakePhoto() {
+            document.getElementById('captured-photo').style.display = 'none';
+            document.getElementById('retake-btn').classList.add('hidden');
+            document.getElementById('save-btn').classList.add('hidden');
+            document.getElementById('capture-btn').classList.remove('hidden');
+            startCamera();
+        }
+
+        async function saveToSheets() {
+            try {
+                showAlert('Saving to database...', 'info');
+                
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'addItem',
+                        userId: config.userId,
+                        barcode: currentBarcode,
+                        image: photoDataUrl,
+                        timestamp: new Date().toISOString(),
+                        location: currentLocation
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Item saved successfully!', 'success');
+                    existingBarcodes.push(currentBarcode);
+                    
+                    currentBarcode = '';
+                    photoDataUrl = '';
+                    document.getElementById('captured-photo').style.display = 'none';
+                    document.getElementById('capture-btn').classList.remove('hidden');
+                    document.getElementById('retake-btn').classList.add('hidden');
+                    document.getElementById('save-btn').classList.add('hidden');
+                    
+                    setTimeout(() => {
+                        showPage('page-scanner');
+                        switchTab('page-scanner');
+                        startScanner();
+                    }, 2000);
+                } else {
+                    showAlert('Error saving to database', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        async function loadInventory() {
+            try {
+                const response = await fetch(`${config.sheetsUrl}?action=getInventory&userId=${config.userId}`);
+                const data = await response.json();
+                const grid = document.getElementById('inventory-grid');
+                
+                if (!data.items || data.items.length === 0) {
+                    grid.innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">No items in inventory yet.</p>';
+                    return;
+                }
+                
+                inventoryItems = data.items;
+                grid.innerHTML = '';
+                
+                data.items.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'inventory-item';
+                    div.id = `item-${item.row}`;
+                    div.innerHTML = `
+                        <img src="${item.image}" alt="Item ${item.barcode}" onclick="openImageViewer(${index})">
+                        <div class="inventory-info">
+                            <div class="barcode">${item.barcode}</div>
+                            <div class="date">${new Date(item.timestamp).toLocaleDateString()}</div>
+                            <div class="location">📍 ${item.location || 'Unknown'}</div>
+                            <div class="item-actions">
+                                <button class="btn-edit" onclick="editItem(${item.row}, '${item.barcode}', '${item.location || ''}')">Edit</button>
+                                <button class="btn-delete" onclick="deleteItem(${item.row}, '${item.barcode}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(div);
+                });
+            } catch (e) {
+                console.error('Error loading inventory:', e);
+                document.getElementById('inventory-grid').innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">Error loading inventory.</p>';
+            }
+        }
+
+        function openImageViewer(index) {
+            currentImageIndex = index;
+            updateImageViewer();
+            const viewer = document.getElementById('image-viewer');
+            viewer.classList.add('active');
+            
+            const viewerContent = document.querySelector('.viewer-content');
+            viewerContent.addEventListener('touchstart', handleTouchStart, { passive: true });
+            viewerContent.addEventListener('touchend', handleTouchEnd, { passive: true });
+        }
+
+        function closeImageViewer() {
+            const viewer = document.getElementById('image-viewer');
+            viewer.classList.remove('active');
+            
+            const viewerContent = document.querySelector('.viewer-content');
+            viewerContent.removeEventListener('touchstart', handleTouchStart);
+            viewerContent.removeEventListener('touchend', handleTouchEnd);
+        }
+
+        function handleTouchStart(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }
+
+        function handleTouchEnd(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    nextImage();
+                } else {
+                    previousImage();
+                }
+            }
+        }
+
+        function previousImage() {
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                updateImageViewer();
+            }
+        }
+
+        function nextImage() {
+            if (currentImageIndex < inventoryItems.length - 1) {
+                currentImageIndex++;
+                updateImageViewer();
+            }
+        }
+
+        function updateImageViewer() {
+            const item = inventoryItems[currentImageIndex];
+            document.getElementById('viewer-img').src = item.image;
+            document.getElementById('viewer-barcode').textContent = item.barcode;
+            document.getElementById('viewer-date').textContent = new Date(item.timestamp).toLocaleString();
+            document.getElementById('viewer-location').textContent = `📍 ${item.location || 'Unknown'}`;
+        }
+
+        function editItem(row, barcode, location) {
+            editingRow = row;
+            document.getElementById('edit-barcode').value = barcode;
+            document.getElementById('edit-location').value = location;
+            document.getElementById('edit-item-overlay').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-item-overlay').classList.remove('active');
+            editingRow = null;
+        }
+
+        async function saveEdit() {
+            const newLocation = document.getElementById('edit-location').value.trim();
+            
+            try {
+                showAlert('Updating item...', 'info');
+                
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'editItem',
+                        userId: config.userId,
+                        row: editingRow,
+                        location: newLocation
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Item updated successfully!', 'success');
+                    closeEditModal();
+                    loadInventory();
+                } else {
+                    showAlert('Error updating item', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        async function deleteItem(row, barcode) {
+            if (!confirm(`Delete item with barcode ${barcode}?`)) {
+                return;
+            }
+            
+            const itemElement = document.getElementById(`item-${row}`);
+            if (itemElement) {
+                itemElement.style.transition = 'opacity 0.3s, transform 0.3s';
+                itemElement.style.opacity = '0';
+                itemElement.style.transform = 'scale(0.8)';
+                setTimeout(() => itemElement.remove(), 300);
+            }
+            
+            try {
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'deleteItem',
+                        userId: config.userId,
+                        row: row
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Item deleted successfully!', 'success');
+                    
+                    const barcodeIndex = existingBarcodes.indexOf(barcode);
+                    if (barcodeIndex > -1) {
+                        existingBarcodes.splice(barcodeIndex, 1);
+                    }
+                    
+                    setTimeout(() => loadInventory(), 1000);
+                } else {
+                    showAlert('Error deleting item', 'warning');
+                    loadInventory();
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+                loadInventory();
+            }
+        }
+
+        async function changePassword() {
+            const currentPass = document.getElementById('current-password').value;
+            const newPass = document.getElementById('new-password').value;
+            
+            if (config.password && config.password !== currentPass) {
+                showAlert('Current password is incorrect', 'warning');
+                return;
+            }
+            
+            try {
+                showAlert('Updating password...', 'info');
+                
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'changePassword',
+                        userId: config.userId,
+                        newPassword: newPass
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    config.password = newPass;
+                    sessionStorage.setItem('duckScanSession', JSON.stringify(config));
+                    showAlert('✅ Password updated successfully!', 'success');
+                    document.getElementById('current-password').value = '';
+                    document.getElementById('new-password').value = '';
+                } else {
+                    showAlert('Error updating password', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        async function updateEmail() {
+            const newEmail = document.getElementById('settings-email').value.trim();
+            
+            try {
+                showAlert('Updating email...', 'info');
+                
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'updateEmail',
+                        userId: config.userId,
+                        email: newEmail
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    config.email = newEmail;
+                    sessionStorage.setItem('duckScanSession', JSON.stringify(config));
+                    showAlert('✅ Email updated successfully!', 'success');
+                } else if (result.status === 'duplicate_email') {
+                    showAlert('This email address is already in use', 'warning');
+                } else {
+                    showAlert('Error updating email', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        async function addCoOwner() {
+            const coOwnerInput = document.getElementById('coowner-id').value.trim();
+            
+            if (!coOwnerInput) {
+                showAlert('Please enter a Duck ID or username', 'warning');
+                return;
+            }
+            
+            try {
+                showAlert('Adding co-owner...', 'info');
+                
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'addCoOwner',
+                        userId: config.userId,
+                        coOwnerId: coOwnerInput
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Co-owner added successfully!', 'success');
+                    document.getElementById('coowner-id').value = '';
+                    loadCoOwners();
+                } else {
+                    showAlert('Error adding co-owner', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        async function loadCoOwners() {
+            try {
+                const response = await fetch(`${config.sheetsUrl}?action=getCoOwners&userId=${config.userId}`);
+                const data = await response.json();
+                
+                const list = document.getElementById('coowner-list');
+                if (data.coOwners && data.coOwners.length > 0) {
+                    list.innerHTML = data.coOwners.map(id => `
+                        <div style="background: #1a1a2e; padding: 10px; border-radius: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #FFD93D;">${id}</span>
+                            <button class="btn-danger" style="width: auto; padding: 5px 15px; margin: 0;" onclick="removeCoOwner('${id}')">Remove</button>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<p style="color: #888; font-size: 14px;">No co-owners yet</p>';
+                }
+            } catch (err) {
+                console.error('Error loading co-owners:', err);
+            }
+        }
+
+        async function removeCoOwner(coOwnerId) {
+            try {
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'removeCoOwner',
+                        userId: config.userId,
+                        coOwnerId: coOwnerId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Co-owner removed!', 'success');
+                    loadCoOwners();
+                }
+            } catch (err) {
+                showAlert('Error removing co-owner', 'warning');
+            }
+        }
+
+        async function addViewer() {
+            const viewerInput = document.getElementById('viewer-id').value.trim();
+            
+            if (!viewerInput) {
+                showAlert('Please enter a Duck ID or username', 'warning');
+                return;
+            }
+            
+            try {
+                showAlert('Adding viewer...', 'info');
+                
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'addViewer',
+                        userId: config.userId,
+                        viewerInput: viewerInput
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Viewer added successfully!', 'success');
+                    document.getElementById('viewer-id').value = '';
+                    loadViewers();
+                } else {
+                    showAlert('Error adding viewer', 'warning');
+                }
+            } catch (err) {
+                showAlert('Error connecting to Google Sheets', 'warning');
+                console.error(err);
+            }
+        }
+
+        async function loadViewers() {
+            try {
+                const response = await fetch(`${config.sheetsUrl}?action=getViewers&userId=${config.userId}`);
+                const data = await response.json();
+                
+                const list = document.getElementById('viewer-list');
+                if (data.viewers && data.viewers.length > 0) {
+                    list.innerHTML = data.viewers.map(id => `
+                        <div style="background: #1a1a2e; padding: 10px; border-radius: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #FFD93D;">${id}</span>
+                            <button class="btn-danger" style="width: auto; padding: 5px 15px; margin: 0;" onclick="removeViewer('${id}')">Remove</button>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<p style="color: #888; font-size: 14px;">No viewers yet</p>';
+                }
+            } catch (err) {
+                console.error('Error loading viewers:', err);
+            }
+        }
+
+        async function removeViewer(viewerId) {
+            try {
+                const response = await fetch(config.sheetsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'removeViewer',
+                        userId: config.userId,
+                        viewerId: viewerId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('✅ Viewer removed!', 'success');
+                    loadViewers();
+                }
+            } catch (err) {
+                showAlert('Error removing viewer', 'warning');
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('duckScanSession');
+            config = {
+                userId: '',
+                username: '',
+                email: '',
+                sheetsUrl: 'https://script.google.com/macros/s/AKfycbzuAcghDOMy8aInT5LlFb8LQ8rQFOL8WFegcJ6c_vQpTulHr1sWUnIuO3SPU_Nll3zT/exec',
+                password: '',
+                authenticated: false
+            };
+            showPage('page-login');
+            document.getElementById('user-id-input').value = '';
+            document.getElementById('password-input').value = '';
+        }
+
+        function updateShareLink() {
+            const shareUrl = `${window.location.origin}${window.location.pathname}?view=${config.userId}`;
+            document.getElementById('share-link').value = shareUrl;
+        }
+
+        function copyShareLink() {
+            const shareInput = document.getElementById('share-link');
+            shareInput.select();
+            shareInput.setSelectionRange(0, 99999); // For mobile
+            
+            navigator.clipboard.writeText(shareInput.value).then(() => {
+                showAlert('📋 Share link copied to clipboard!', 'success');
+            }).catch(() => {
+                showAlert('Failed to copy link. Please copy manually.', 'warning');
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('image-viewer').classList.contains('active')) {
+                if (e.key === 'ArrowLeft') previousImage();
+                if (e.key === 'ArrowRight') nextImage();
+                if (e.key === 'Escape') closeImageViewer();
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>
