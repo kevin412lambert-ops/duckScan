@@ -631,7 +631,7 @@
                 <input type="password" id="password-input" placeholder="Enter your password">
                 <button class="btn-primary" onclick="handleLogin()">Login</button>
                 <button class="btn-secondary" onclick="handleSetup()">New User? Setup Account</button>
-                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.3.3</p>
+                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.3.1</p>
             </div>
         </div>
 
@@ -1398,7 +1398,8 @@
                 return;
             }
             
-            const searchTerm = barcode.toLowerCase();
+            // Remove leading zeros from search term to match Google Sheets behavior
+            const searchTerm = barcode.replace(/^0+/, '').toLowerCase();
             const filtered = allInventoryItems.filter(item => {
                 const itemBarcode = String(item.barcode || '').toLowerCase();
                 return itemBarcode.includes(searchTerm);
