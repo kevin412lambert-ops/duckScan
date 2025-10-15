@@ -612,7 +612,7 @@
                 <input type="password" id="password-input" placeholder="Enter your password">
                 <button class="btn-primary" onclick="handleLogin()">Login</button>
                 <button class="btn-secondary" onclick="handleSetup()">New User? Setup Account</button>
-                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.2.8</p>
+                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.2.9</p>
             </div>
         </div>
 
@@ -1109,10 +1109,15 @@
 
         function showScanFlash() {
             const scanner = document.getElementById('scanner-container');
-            const flash = document.createElement('div');
-            flash.className = 'scan-flash';
-            scanner.appendChild(flash);
-            setTimeout(() => flash.remove(), 300);
+            const sharedScanner = document.getElementById('shared-scanner-container');
+            const target = sharedMode ? sharedScanner : scanner;
+            
+            if (target) {
+                const flash = document.createElement('div');
+                flash.className = 'scan-flash';
+                target.appendChild(flash);
+                setTimeout(() => flash.remove(), 300);
+            }
         }
 
         function submitManualBarcode() {
