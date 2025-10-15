@@ -631,7 +631,7 @@
                 <input type="password" id="password-input" placeholder="Enter your password">
                 <button class="btn-primary" onclick="handleLogin()">Login</button>
                 <button class="btn-secondary" onclick="handleSetup()">New User? Setup Account</button>
-                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.3.2</p>
+                <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">v1.3.3</p>
             </div>
         </div>
 
@@ -1398,9 +1398,11 @@
                 return;
             }
             
-            const filtered = allInventoryItems.filter(item => 
-                item.barcode.toLowerCase().includes(barcode.toLowerCase())
-            );
+            const searchTerm = barcode.toLowerCase();
+            const filtered = allInventoryItems.filter(item => {
+                const itemBarcode = String(item.barcode || '').toLowerCase();
+                return itemBarcode.includes(searchTerm);
+            });
             
             displayInventoryItems(filtered);
             
